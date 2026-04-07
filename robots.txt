@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://pix.npaso.com/sitemap.xml

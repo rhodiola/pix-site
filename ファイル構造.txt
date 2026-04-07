@@ -1,0 +1,30 @@
+
+
+project-root/
+├─ index.html                 # 生成後のトップページ
+├─ items/                     # 生成後の個別ビューワー置き場
+│  ├─ eve-20260323-152334/
+│  │  └─ index.html
+│  ├─ eve-20260328-162907/
+│  │  └─ index.html
+│  └─ ...
+│
+├─ data/
+│  └─ images.json
+│
+├─ js/
+│  └─ app.js                  # トップ一覧用JS
+│
+├─ css/
+│  └─ style.css
+│
+├─ images/
+│  └─ site-ornament.webp      # 必要なら
+│
+├─ build/
+│  ├─ build.js
+│  └─ templates/
+│     ├─ top.html
+│     └─ item.html
+│
+└─ package.json
