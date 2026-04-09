@@ -18,9 +18,6 @@ const elements = {
     currentCount: document.querySelector("[data-current-count]")
 };
 
-let masonryRenderToken = 0;
-let resizeTimer = null;
-
 function escapeHtml(value = "") {
     return String(value)
         .replace(/&/g, "&amp;")
@@ -105,7 +102,7 @@ function sortImages(images) {
 function filterImages() {
     const search = state.searchText.trim().toLowerCase();
 
-    const items = state.allImages.filter((image) => {
+    let items = state.allImages.filter((image) => {
         const matchesCategory =
             state.activeCategory === "all" ||
             (image.category || []).includes(state.activeCategory);
@@ -135,102 +132,9 @@ function createCardHtml(image) {
   `;
 }
 
-function createCardElement(image) {
-    const wrapper = document.createElement("div");
-    wrapper.innerHTML = createCardHtml(image).trim();
-    return wrapper.firstElementChild;
-}
-
-function getColumnCount() {
-    const width = window.innerWidth;
-
-    if (width <= 520) return 1;
-    if (width <= 640) return 2;
-    if (width <= 900) return 3;
-    if (width <= 1180) return 4;
-    return 5;
-}
-
-function createMasonryColumns(count) {
-    const fragment = document.createDocumentFragment();
-    const columns = [];
-
-    for (let i = 0; i < count; i += 1) {
-        const column = document.createElement("div");
-        column.className = "gallery__column";
-        column.dataset.columnIndex = String(i);
-        columns.push(column);
-        fragment.appendChild(column);
-    }
-
-    elements.gallery.innerHTML = "";
-    elements.gallery.appendChild(fragment);
-
-    return columns;
-}
-
-function getShortestColumn(columns) {
-    return columns.reduce((shortest, current) => {
-        if (!shortest) return current;
-        return current.offsetHeight < shortest.offsetHeight ? current : shortest;
-    }, null);
-}
-
-function waitForImagesInCard(card) {
-    const images = Array.from(card.querySelectorAll("img"));
-
-    if (images.length === 0) {
-        return Promise.resolve();
-    }
-
-    return Promise.all(
-        images.map((img) => new Promise((resolve) => {
-            if (img.complete) {
-                resolve();
-                return;
-            }
-
-            const done = () => {
-                img.removeEventListener("load", done);
-                img.removeEventListener("error", done);
-                resolve();
-            };
-
-            img.addEventListener("load", done, { once: true });
-            img.addEventListener("error", done, { once: true });
-        }))
-    );
-}
-
-async function renderGallery() {
-    const token = ++masonryRenderToken;
-    const items = [...state.filteredImages];
-
-    elements.galleryEmpty.hidden = items.length > 0;
-    elements.gallery.innerHTML = "";
-
-    if (items.length === 0) {
-        return;
-    }
-
-    const columnCount = getColumnCount();
-    const columns = createMasonryColumns(columnCount);
-
-    for (const image of items) {
-        if (token !== masonryRenderToken) {
-            return;
-        }
-
-        const card = createCardElement(image);
-        const targetColumn = getShortestColumn(columns) || columns[0];
-        targetColumn.appendChild(card);
-
-        await waitForImagesInCard(card);
-
-        if (token !== masonryRenderToken) {
-            return;
-        }
-    }
+function renderGallery() {
+    elements.gallery.innerHTML = state.filteredImages.map(createCardHtml).join("");
+    elements.galleryEmpty.hidden = state.filteredImages.length > 0;
 }
 
 function updateCurrentCount() {
@@ -327,13 +231,6 @@ function bindEvents() {
         const link = event.target.closest(".card__link");
         if (!link) return;
         saveGalleryState();
-    });
-
-    window.addEventListener("resize", () => {
-        clearTimeout(resizeTimer);
-        resizeTimer = window.setTimeout(() => {
-            renderGallery();
-        }, 120);
     });
 }
 

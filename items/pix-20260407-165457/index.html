@@ -28,9 +28,11 @@
             overflow: hidden;
         }
 
-        a {
+        a,
+        button {
             color: inherit;
             text-decoration: none;
+            font: inherit;
         }
 
         .viewer-back {
@@ -143,8 +145,11 @@
 
         .viewer-meta__title {
             margin: 0 0 8px;
-            font-size: clamp(1.05rem, 2vw, 1.28rem);
-            line-height: 1.3;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: clamp(0.92rem, 1.4vw, 1.02rem);
+            font-weight: 500;
+            line-height: 1.45;
+            letter-spacing: 0.01em;
         }
 
         .viewer-meta__description {
@@ -152,6 +157,68 @@
             color: rgba(255, 255, 255, 0.84);
             font-size: 0.96rem;
             line-height: 1.65;
+        }
+
+        .viewer-meta__actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .viewer-download {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.87rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+            cursor: pointer;
+        }
+
+        .viewer-download.is-available {
+            display: inline-flex;
+        }
+
+        .viewer-download:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .viewer-download:active {
+            transform: translateY(0);
+        }
+
+        .viewer-download.is-busy {
+            opacity: 0.72;
+            cursor: progress;
+        }
+
+        .viewer-download.is-disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .viewer-download-note {
+            display: none;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .viewer-download-note.is-visible {
+            display: block;
         }
 
         .viewer-meta__tags {
@@ -191,6 +258,16 @@
             .viewer-meta__description {
                 font-size: 0.9rem;
             }
+
+            .viewer-download {
+                min-height: 36px;
+                padding: 0 12px;
+                font-size: 0.84rem;
+            }
+
+            .viewer-download-note {
+                font-size: 0.8rem;
+            }
         }
     </style>
 </head>
@@ -206,6 +283,13 @@
     <aside class="viewer-meta" id="viewerMeta" aria-label="作品情報">
         <h1 class="viewer-meta__title">古びた部屋</h1>
         <p class="viewer-meta__description">机の上の古い手紙と手帳を、差し込む光が照らす部屋</p>
+
+        <div class="viewer-meta__actions">
+            <button class="viewer-download" id="viewerDownload" type="button" data-download-url="https://img.npaso.com/download/pix-20260407-165457.webp"
+                data-download-filename="pix-20260407-165457.webp" aria-label="高解像度 Download">高解像度 Download</button>
+        </div>
+
+        <p class="viewer-download-note" id="viewerDownloadNote" aria-live="polite"></p>
     </aside>
 
     <script>
@@ -214,6 +298,8 @@
             const image = document.getElementById("viewerImage");
             const backButton = document.querySelector(".viewer-back");
             const metaPanel = document.getElementById("viewerMeta");
+            const downloadButton = document.getElementById("viewerDownload");
+            const downloadNote = document.getElementById("viewerDownloadNote");
 
             let scale = 1;
             let translateX = 0;
@@ -222,6 +308,7 @@
             const MIN_SCALE = 1;
             const MAX_SCALE = 6;
             const SCALE_STEP = 0.2;
+            const OVERLAY_HIDE_DELAY = 2600;
 
             let isDragging = false;
             let dragStartX = 0;
@@ -230,6 +317,9 @@
             let dragOriginY = 0;
 
             let hideTimer = null;
+            let noteTimer = null;
+            let isDownloadAvailable = false;
+            let isDownloading = false;
 
             function clamp(value, min, max) {
                 return Math.min(max, Math.max(min, value));
@@ -283,8 +373,113 @@
                     backButton.classList.add("is-dimmed");
                     metaPanel.classList.remove("is-visible");
                     metaPanel.classList.add("is-dimmed");
-                }, 1800);
+                }, OVERLAY_HIDE_DELAY);
             }
+
+            function showNote(message) {
+                if (!downloadNote) return;
+
+                clearTimeout(noteTimer);
+                downloadNote.textContent = message || "";
+                downloadNote.classList.toggle("is-visible", Boolean(message));
+
+                if (message) {
+                    noteTimer = setTimeout(() => {
+                        downloadNote.textContent = "";
+                        downloadNote.classList.remove("is-visible");
+                    }, 2600);
+                }
+            }
+
+            function setDownloadAvailable(available) {
+                isDownloadAvailable = available;
+                downloadButton.classList.toggle("is-available", available);
+                downloadButton.classList.toggle("is-disabled", !available);
+
+                if (!available) {
+                    showNote("");
+                }
+            }
+
+            function detectDownloadAvailability() {
+                const url = downloadButton?.dataset.downloadUrl;
+                setDownloadAvailable(Boolean(downloadButton && url));
+            }
+
+
+            async function downloadCurrentImage() {
+                if (!downloadButton || !isDownloadAvailable || isDownloading) {
+                    return;
+                }
+
+                const url = downloadButton.dataset.downloadUrl;
+                const filename = downloadButton.dataset.downloadFilename || "pix-20260407-165457.webp";
+
+                if (!url) {
+                    showNote("URL なし");
+                    return;
+                }
+
+                isDownloading = true;
+                downloadButton.classList.add("is-busy");
+                showNote("");
+                showOverlay();
+
+                try {
+                    console.log("[download] page origin =", location.origin);
+                    console.log("[download] target url  =", url);
+
+                    const response = await fetch(url, {
+                        method: "GET",
+                        mode: "cors",
+                        credentials: "omit",
+                        cache: "no-store",
+                        redirect: "follow"
+                    });
+
+                    console.log("[download] status =", response.status, response.statusText);
+                    console.log("[download] type   =", response.type);
+                    console.log("[download] final  =", response.url);
+                    console.log("[download] a-c-a-o =", response.headers.get("access-control-allow-origin"));
+                    console.log("[download] ctype    =", response.headers.get("content-type"));
+                    console.log("[download] cdisp    =", response.headers.get("content-disposition"));
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const blob = await response.blob();
+                    console.log("[download] blob size =", blob.size, "blob type =", blob.type);
+
+                    const objectUrl = URL.createObjectURL(blob);
+                    console.log("[download] objectUrl =", objectUrl);
+
+                    try {
+                        const link = document.createElement("a");
+                        link.href = objectUrl;
+                        link.download = filename;
+                        link.rel = "noopener";
+                        link.style.display = "none";
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                        showNote("ダウンロード開始を試行しました。");
+                    } finally {
+                        setTimeout(() => {
+                            URL.revokeObjectURL(objectUrl);
+                        }, 1500);
+                    }
+                } catch (error) {
+                    console.error("[download] failed:", error);
+                    const msg = error && error.message ? error.message : String(error);
+                    showNote(`失敗: ${msg}`);
+                } finally {
+                    isDownloading = false;
+                    downloadButton.classList.remove("is-busy");
+                    showOverlay();
+                }
+            }
+
 
             container.addEventListener("wheel", (event) => {
                 event.preventDefault();
@@ -307,9 +502,13 @@
                     resetView();
                 } else if (key === "Escape") {
                     event.preventDefault();
-                    if (document.referrer && new URL(document.referrer).origin === location.origin) {
-                        history.back();
-                    } else {
+                    try {
+                        if (document.referrer && new URL(document.referrer).origin === location.origin) {
+                            history.back();
+                        } else {
+                            window.location.href = "../../index.html";
+                        }
+                    } catch (_) {
                         window.location.href = "../../index.html";
                     }
                 }
@@ -353,7 +552,10 @@
 
                 try {
                     container.releasePointerCapture(event.pointerId);
-                } catch (_) { }
+                } catch (_) {
+                }
+
+                showOverlay();
             }
 
             container.addEventListener("pointerup", endDrag);
@@ -368,8 +570,28 @@
                 showOverlay();
             });
 
-            ["mousemove", "mousedown", "touchstart", "wheel", "click"].forEach((eventName) => {
+            downloadButton?.addEventListener("click", async (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                await downloadCurrentImage();
+            });
+
+            [
+                "mousemove",
+                "mousedown",
+                "touchstart",
+                "pointermove",
+                "pointerdown",
+                "click",
+                "wheel"
+            ].forEach((eventName) => {
                 window.addEventListener(eventName, showOverlay, { passive: true });
+            });
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                    showOverlay();
+                }
             });
 
             if (image.complete) {
@@ -383,6 +605,7 @@
                 showOverlay();
             });
 
+            detectDownloadAvailability();
             showOverlay();
         })();
     </script>

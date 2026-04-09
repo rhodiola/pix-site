@@ -171,9 +171,6 @@ function buildIndexHtml(images) {
 function buildItemHtml(image) {
     let template = readText(ITEM_TEMPLATE_FILE);
     const urls = getImageUrls(image.id);
-    const tagsHtml = (image.tags || [])
-        .map((tag) => `<span class="viewer-meta__tag">${escapeHtml(tag)}</span>`)
-        .join("");
 
     template = replaceToken(template, "PAGE_TITLE", escapeHtml(`${image.title} | pix.npaso.com`));
     template = replaceToken(template, "META_DESCRIPTION", escapeAttribute(image.alt || image.title));
@@ -182,7 +179,7 @@ function buildItemHtml(image) {
     template = replaceToken(template, "IMAGE_ALT", escapeAttribute(image.alt));
     template = replaceToken(template, "TITLE", escapeHtml(image.title));
     template = replaceToken(template, "DISPLAY_DESCRIPTION", escapeHtml(image.alt));
-    template = replaceToken(template, "TAGS", tagsHtml);
+    template = replaceToken(template, "TAGS", "");
 
     return template;
 }

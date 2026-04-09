@@ -176,6 +176,7 @@ function buildItemHtml(image) {
     template = replaceToken(template, "META_DESCRIPTION", escapeAttribute(image.alt || image.title));
     template = replaceToken(template, "ITEM_ID", escapeAttribute(image.id));
     template = replaceToken(template, "VIEWER_IMAGE_URL", escapeAttribute(urls.viewer));
+    template = replaceToken(template, "DOWNLOAD_IMAGE_URL", escapeAttribute(urls.download));
     template = replaceToken(template, "IMAGE_ALT", escapeAttribute(image.alt));
     template = replaceToken(template, "TITLE", escapeHtml(image.title));
     template = replaceToken(template, "DISPLAY_DESCRIPTION", escapeHtml(image.alt));
