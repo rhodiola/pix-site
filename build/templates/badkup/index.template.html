@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>pix.npaso.com</title>
+    <meta name="description" content="生成AI画像ギャラリー。壁紙・ポスター・背景素材用として。" />
+    <link rel="canonical" href="https://pix.npaso.com/" />
+    <link rel="stylesheet" href="./css/style.css?v=20260407-1" />
+</head>
+
+<body>
+    <div id="top"></div>
+
+    <header class="site-header">
+        <div class="container site-header__inner">
+            <a class="brand" href="./index.html">
+                <span class="brand__sub">Home</span>
+            </a>
+            <nav class="site-nav" aria-label="Primary">
+                <a href="#gallery">Gallery</a>
+                <a href="#top">Top</a>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container hero__inner">
+                <div class="hero__eyebrow">Wallpapers / Posters / Backgrounds</div>
+                <h1>Pix</h1>
+                <p class="hero__lead">自作AI画像のギャラリーです。<br>壁紙・ポスター・背景素材としてどうぞ。</p>
+                <div class="hero__meta">
+                    <div class="hero__meta-box">
+                        <span class="hero__meta-label">Current count</span>
+                        <span class="hero__meta-value" data-current-count>__CURRENT_COUNT__</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gallery" class="container section-gallery" aria-labelledby="gallery-heading">
+            <div class="toolbar">
+                <div class="toolbar__left">
+                    <h2 id="gallery-heading">Gallery</h2>
+                    <div class="tabs" data-category-tabs>
+                        __CATEGORY_FILTERS__
+                    </div>
+                </div>
+
+                <div class="toolbar__right">
+                    <input class="search" type="search" placeholder="タイトル・タグで検索" aria-label="検索" data-search />
+                    <select class="sort" aria-label="並び替え" data-sort>
+                        <option value="new" selected>新着順</option>
+                        <option value="old">古い順</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="gallery" data-gallery>
+                __INITIAL_GALLERY__
+            </div>
+
+            <p class="gallery-empty" data-gallery-empty hidden>条件に合う画像がありません。</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container site-footer__inner">
+            <div>© 2026 pix.npaso.com</div>
+            <div>Generated image gallery</div>
+        </div>
+    </footer>
+
+    <script id="initial-images" type="application/json">__INITIAL_IMAGES_JSON__</script>
+    <script src="./js/app.js?v=20260407-1"></script>
+</body>
+
+</html>

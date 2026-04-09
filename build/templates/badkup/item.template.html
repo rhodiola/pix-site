@@ -5,9 +5,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
-    <title>崩れた廃墟 | pix.npaso.com</title>
-    <meta name="description" content="光が差し込む、水没した朽ちた建物の廃墟の通路" />
-    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260407-163746/" />
+    <title>__PAGE_TITLE__</title>
+    <meta name="description" content="__META_DESCRIPTION__" />
+    <link rel="canonical" href="https://pix.npaso.com/items/__ITEM_ID__/" />
 
     <style>
         * {
@@ -276,17 +276,17 @@
     <a class="viewer-back" href="../../index.html" aria-label="一覧へ戻る">←</a>
 
     <main class="viewer-stage" id="viewerStage" aria-label="画像ビューア">
-        <img class="viewer-image" id="viewerImage" src="https://img.npaso.com/viewer/pix-20260407-163746.webp" alt="光が差し込む、水没した朽ちた建物の廃墟の通路" loading="eager"
+        <img class="viewer-image" id="viewerImage" src="__VIEWER_IMAGE_URL__" alt="__IMAGE_ALT__" loading="eager"
             draggable="false" />
     </main>
 
     <aside class="viewer-meta" id="viewerMeta" aria-label="作品情報">
-        <h1 class="viewer-meta__title">崩れた廃墟</h1>
-        <p class="viewer-meta__description">光が差し込む、水没した朽ちた建物の廃墟の通路</p>
+        <h1 class="viewer-meta__title">__TITLE__</h1>
+        <p class="viewer-meta__description">__DISPLAY_DESCRIPTION__</p>
 
         <div class="viewer-meta__actions">
-            <button class="viewer-download" id="viewerDownload" type="button" data-download-url="https://img.npaso.com/download/pix-20260407-163746.webp"
-                data-download-filename="pix-20260407-163746.webp" aria-label="高解像度 Download">高解像度 Download</button>
+            <button class="viewer-download" id="viewerDownload" type="button" data-download-url="__DOWNLOAD_IMAGE_URL__"
+                data-download-filename="__ITEM_ID__.webp" aria-label="高解像度 Download">高解像度 Download</button>
         </div>
 
         <p class="viewer-download-note" id="viewerDownloadNote" aria-live="polite"></p>
@@ -410,7 +410,7 @@
                 }
 
                 const url = downloadButton.dataset.downloadUrl;
-                const filename = downloadButton.dataset.downloadFilename || "pix-20260407-163746.webp";
+                const filename = downloadButton.dataset.downloadFilename || "__ITEM_ID__.webp";
 
                 if (!url) {
                     return;
