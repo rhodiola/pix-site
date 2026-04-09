@@ -299,7 +299,6 @@
             const backButton = document.querySelector(".viewer-back");
             const metaPanel = document.getElementById("viewerMeta");
             const downloadButton = document.getElementById("viewerDownload");
-            const downloadNote = document.getElementById("viewerDownloadNote");
 
             let scale = 1;
             let translateX = 0;
@@ -317,7 +316,6 @@
             let dragOriginY = 0;
 
             let hideTimer = null;
-            let noteTimer = null;
             let isDownloadAvailable = false;
             let isDownloading = false;
 
@@ -376,36 +374,19 @@
                 }, OVERLAY_HIDE_DELAY);
             }
 
-            function showNote(message) {
-                if (!downloadNote) return;
-
-                clearTimeout(noteTimer);
-                downloadNote.textContent = message || "";
-                downloadNote.classList.toggle("is-visible", Boolean(message));
-
-                if (message) {
-                    noteTimer = setTimeout(() => {
-                        downloadNote.textContent = "";
-                        downloadNote.classList.remove("is-visible");
-                    }, 2600);
-                }
+            function showNote(_) {
             }
 
             function setDownloadAvailable(available) {
                 isDownloadAvailable = available;
                 downloadButton.classList.toggle("is-available", available);
                 downloadButton.classList.toggle("is-disabled", !available);
-
-                if (!available) {
-                    showNote("");
-                }
             }
 
             function detectDownloadAvailability() {
                 const url = downloadButton?.dataset.downloadUrl;
                 setDownloadAvailable(Boolean(downloadButton && url));
             }
-
 
             async function downloadCurrentImage() {
                 if (!downloadButton || !isDownloadAvailable || isDownloading) {
@@ -416,19 +397,14 @@
                 const filename = downloadButton.dataset.downloadFilename || "pix-20260409-065159.webp";
 
                 if (!url) {
-                    showNote("URL なし");
                     return;
                 }
 
                 isDownloading = true;
                 downloadButton.classList.add("is-busy");
-                showNote("");
                 showOverlay();
 
                 try {
-                    console.log("[download] page origin =", location.origin);
-                    console.log("[download] target url  =", url);
-
                     const response = await fetch(url, {
                         method: "GET",
                         mode: "cors",
@@ -437,22 +413,12 @@
                         redirect: "follow"
                     });
 
-                    console.log("[download] status =", response.status, response.statusText);
-                    console.log("[download] type   =", response.type);
-                    console.log("[download] final  =", response.url);
-                    console.log("[download] a-c-a-o =", response.headers.get("access-control-allow-origin"));
-                    console.log("[download] ctype    =", response.headers.get("content-type"));
-                    console.log("[download] cdisp    =", response.headers.get("content-disposition"));
-
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}`);
                     }
 
                     const blob = await response.blob();
-                    console.log("[download] blob size =", blob.size, "blob type =", blob.type);
-
                     const objectUrl = URL.createObjectURL(blob);
-                    console.log("[download] objectUrl =", objectUrl);
 
                     try {
                         const link = document.createElement("a");
@@ -463,23 +429,18 @@
                         document.body.appendChild(link);
                         link.click();
                         link.remove();
-                        showNote("ダウンロード開始を試行しました。");
                     } finally {
                         setTimeout(() => {
                             URL.revokeObjectURL(objectUrl);
                         }, 1500);
                     }
-                } catch (error) {
-                    console.error("[download] failed:", error);
-                    const msg = error && error.message ? error.message : String(error);
-                    showNote(`失敗: ${msg}`);
+                } catch (_) {
                 } finally {
                     isDownloading = false;
                     downloadButton.classList.remove("is-busy");
                     showOverlay();
                 }
             }
-
 
             container.addEventListener("wheel", (event) => {
                 event.preventDefault();
