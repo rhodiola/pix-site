@@ -385,7 +385,23 @@
 
             function detectDownloadAvailability() {
                 const url = downloadButton?.dataset.downloadUrl;
-                setDownloadAvailable(Boolean(downloadButton && url));
+
+                if (!downloadButton || !url) {
+                    setDownloadAvailable(false);
+                    return;
+                }
+
+                const probe = new Image();
+
+                probe.onload = () => {
+                    setDownloadAvailable(true);
+                };
+
+                probe.onerror = () => {
+                    setDownloadAvailable(false);
+                };
+
+                probe.src = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
             }
 
             async function downloadCurrentImage() {
