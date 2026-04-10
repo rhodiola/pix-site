@@ -316,16 +316,12 @@
             let translateY = 0;
 
             let isMouseDragging = false;
-            let mouseDragStartX = 0;
-            let mouseDragStartY = 0;
-            let mouseDragOriginX = 0;
-            let mouseDragOriginY = 0;
+            let mouseLastX = 0;
+            let mouseLastY = 0;
 
             let touchMode = "none";
-            let touchDragStartX = 0;
-            let touchDragStartY = 0;
-            let touchDragOriginX = 0;
-            let touchDragOriginY = 0;
+            let touchLastX = 0;
+            let touchLastY = 0;
             let pinchStartDistance = 0;
             let pinchStartScale = 1;
             let pinchStartTranslateX = 0;
@@ -464,10 +460,8 @@
             function beginTouchDrag(touch) {
                 touchMode = scale > 1 ? "drag" : "none";
                 setGestureActive(touchMode === "drag");
-                touchDragStartX = touch.clientX;
-                touchDragStartY = touch.clientY;
-                touchDragOriginX = translateX;
-                touchDragOriginY = translateY;
+                touchLastX = touch.clientX;
+                touchLastY = touch.clientY;
                 applyTransform();
             }
 
@@ -490,11 +484,13 @@
                     return;
                 }
 
-                const nextX = touchDragOriginX + (touch.clientX - touchDragStartX);
-                const nextY = touchDragOriginY + (touch.clientY - touchDragStartY);
-                const constrained = constrainTranslation(nextX, nextY, scale);
+                const deltaX = touch.clientX - touchLastX;
+                const deltaY = touch.clientY - touchLastY;
+                const constrained = constrainTranslation(translateX + deltaX, translateY + deltaY, scale);
                 translateX = constrained.x;
                 translateY = constrained.y;
+                touchLastX = touch.clientX;
+                touchLastY = touch.clientY;
                 applyTransform();
             }
 
@@ -677,10 +673,8 @@
 
                 isMouseDragging = true;
                 setGestureActive(true);
-                mouseDragStartX = event.clientX;
-                mouseDragStartY = event.clientY;
-                mouseDragOriginX = translateX;
-                mouseDragOriginY = translateY;
+                mouseLastX = event.clientX;
+                mouseLastY = event.clientY;
                 applyTransform();
                 showOverlay();
             });
@@ -690,11 +684,13 @@
                     return;
                 }
 
-                const nextX = mouseDragOriginX + (event.clientX - mouseDragStartX);
-                const nextY = mouseDragOriginY + (event.clientY - mouseDragStartY);
-                const constrained = constrainTranslation(nextX, nextY, scale);
+                const deltaX = event.clientX - mouseLastX;
+                const deltaY = event.clientY - mouseLastY;
+                const constrained = constrainTranslation(translateX + deltaX, translateY + deltaY, scale);
                 translateX = constrained.x;
                 translateY = constrained.y;
+                mouseLastX = event.clientX;
+                mouseLastY = event.clientY;
                 applyTransform();
                 showOverlay();
             });
@@ -808,12 +804,6 @@
 
             ["mousemove", "mousedown", "touchstart", "click", "wheel"].forEach((eventName) => {
                 window.addEventListener(eventName, showOverlay, { passive: true });
-            });
-
-            document.addEventListener("visibilitychange", () => {
-                if (document.visibilityState === "visible") {
-                    scheduleViewportReset();
-                }
             });
 
             if (image.complete) {
