@@ -72,6 +72,11 @@
             pointer-events: none;
         }
 
+        body.is-gesture-active .viewer-back,
+        body.is-gesture-active .viewer-meta {
+            pointer-events: none !important;
+        }
+
         .viewer-back:hover {
             background: rgba(0, 0, 0, 0.84);
             transform: translateY(-1px);
@@ -406,6 +411,7 @@
                 isMouseDragging = false;
                 touchMode = "none";
                 pinchStartDistance = 0;
+                setGestureActive(false);
                 applyTransform();
             }
 
@@ -457,6 +463,7 @@
 
             function beginTouchDrag(touch) {
                 touchMode = scale > 1 ? "drag" : "none";
+                setGestureActive(touchMode === "drag");
                 touchDragStartX = touch.clientX;
                 touchDragStartY = touch.clientY;
                 touchDragOriginX = translateX;
@@ -465,6 +472,7 @@
             }
 
             function beginTouchPinch(touchA, touchB) {
+                setGestureActive(true);
                 const midpoint = getTouchMidpoint(touchA, touchB);
                 const point = getPointFromClient(midpoint.clientX, midpoint.clientY);
                 touchMode = "pinch";
@@ -524,6 +532,10 @@
                         });
                     });
                 }, RESIZE_SETTLE_DELAY);
+            }
+
+            function setGestureActive(active) {
+                document.body.classList.toggle("is-gesture-active", active);
             }
 
             function showOverlay() {
@@ -664,6 +676,7 @@
                 }
 
                 isMouseDragging = true;
+                setGestureActive(true);
                 mouseDragStartX = event.clientX;
                 mouseDragStartY = event.clientY;
                 mouseDragOriginX = translateX;
@@ -691,6 +704,7 @@
                     return;
                 }
                 isMouseDragging = false;
+                setGestureActive(false);
                 applyTransform();
                 showOverlay();
             }
@@ -712,6 +726,7 @@
                     beginTouchDrag(touches[0]);
                 } else {
                     touchMode = "none";
+                    setGestureActive(false);
                 }
 
                 showOverlay();
@@ -762,6 +777,7 @@
                     beginTouchDrag(touches[0]);
                 } else {
                     touchMode = "none";
+                    setGestureActive(false);
                     applyTransform();
                 }
 
