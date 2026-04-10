@@ -308,6 +308,7 @@
             const MAX_SCALE = 6;
             const SCALE_STEP = 0.2;
             const OVERLAY_HIDE_DELAY = 2600;
+            const RESIZE_SETTLE_DELAY = 180;
 
             let isDragging = false;
             let dragStartX = 0;
@@ -326,6 +327,8 @@
             let hideTimer = null;
             let isDownloadAvailable = false;
             let isDownloading = false;
+            let resizeTimer = null;
+            let isViewportSettling = false;
 
             function clamp(value, min, max) {
                 return Math.min(max, Math.max(min, value));
@@ -337,11 +340,23 @@
                 container.classList.toggle("is-dragging", isDragging);
             }
 
+            function resetGestureState() {
+                activePointers.clear();
+                pinchStartDistance = 0;
+                pinchStartScale = scale;
+                pinchStartTranslateX = translateX;
+                pinchStartTranslateY = translateY;
+                pinchStartMidX = 0;
+                pinchStartMidY = 0;
+                isDragging = false;
+                applyTransform();
+            }
+
             function resetView() {
                 scale = 1;
                 translateX = 0;
                 translateY = 0;
-                isDragging = false;
+                resetGestureState();
                 applyTransform();
             }
 
@@ -433,6 +448,22 @@
                 }
 
                 applyTransform();
+            }
+
+            function scheduleViewportReset() {
+                isViewportSettling = true;
+                clearTimeout(resizeTimer);
+                resetGestureState();
+
+                resizeTimer = setTimeout(() => {
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            resetView();
+                            isViewportSettling = false;
+                            showOverlay();
+                        });
+                    });
+                }, RESIZE_SETTLE_DELAY);
             }
 
             function showOverlay() {
@@ -535,6 +566,10 @@
             }
 
             container.addEventListener("wheel", (event) => {
+                if (isViewportSettling) {
+                    return;
+                }
+
                 event.preventDefault();
                 const delta = event.deltaY < 0 ? SCALE_STEP : -SCALE_STEP;
                 zoomAt(event.clientX, event.clientY, scale + delta);
@@ -542,6 +577,10 @@
             }, { passive: false });
 
             window.addEventListener("keydown", (event) => {
+                if (isViewportSettling) {
+                    return;
+                }
+
                 const key = event.key;
 
                 if (key === "+" || key === "=") {
@@ -570,6 +609,10 @@
             });
 
             container.addEventListener("pointerdown", (event) => {
+                if (isViewportSettling) {
+                    return;
+                }
+
                 activePointers.set(event.pointerId, {
                     clientX: event.clientX,
                     clientY: event.clientY
@@ -597,7 +640,7 @@
             });
 
             container.addEventListener("pointermove", (event) => {
-                if (!activePointers.has(event.pointerId)) {
+                if (isViewportSettling || !activePointers.has(event.pointerId)) {
                     return;
                 }
 
@@ -628,6 +671,12 @@
                 try {
                     container.releasePointerCapture(event.pointerId);
                 } catch (_) {
+                }
+
+                if (isViewportSettling) {
+                    resetGestureState();
+                    showOverlay();
+                    return;
                 }
 
                 if (activePointers.size >= 2) {
@@ -667,6 +716,10 @@
             });
 
             container.addEventListener("dblclick", (event) => {
+                if (isViewportSettling) {
+                    return;
+                }
+
                 if (scale > 1) {
                     resetView();
                 } else {
@@ -695,7 +748,7 @@
 
             document.addEventListener("visibilitychange", () => {
                 if (document.visibilityState === "visible") {
-                    showOverlay();
+                    scheduleViewportReset();
                 }
             });
 
@@ -705,12 +758,9 @@
                 image.addEventListener("load", resetView, { once: true });
             }
 
-            window.addEventListener("resize", () => {
-                resetView();
-                activePointers.clear();
-                pinchStartDistance = 0;
-                showOverlay();
-            });
+            window.addEventListener("resize", scheduleViewportReset);
+            window.addEventListener("orientationchange", scheduleViewportReset);
+            window.visualViewport?.addEventListener("resize", scheduleViewportReset);
 
             detectDownloadAvailability();
             showOverlay();
