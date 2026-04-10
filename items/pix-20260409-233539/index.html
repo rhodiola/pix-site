@@ -315,6 +315,14 @@
             let dragOriginX = 0;
             let dragOriginY = 0;
 
+            const activePointers = new Map();
+            let pinchStartDistance = 0;
+            let pinchStartScale = 1;
+            let pinchStartTranslateX = 0;
+            let pinchStartTranslateY = 0;
+            let pinchStartMidX = 0;
+            let pinchStartMidY = 0;
+
             let hideTimer = null;
             let isDownloadAvailable = false;
             let isDownloading = false;
@@ -326,30 +334,98 @@
             function applyTransform() {
                 image.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
                 container.classList.toggle("is-zoomed", scale > 1);
+                container.classList.toggle("is-dragging", isDragging);
             }
 
             function resetView() {
                 scale = 1;
                 translateX = 0;
                 translateY = 0;
+                isDragging = false;
                 applyTransform();
             }
 
-            function zoomAt(clientX, clientY, nextScale) {
+            function getPointFromClient(clientX, clientY) {
                 const rect = container.getBoundingClientRect();
-                const cx = clientX - rect.left - rect.width / 2;
-                const cy = clientY - rect.top - rect.height / 2;
+                return {
+                    x: clientX - rect.left - rect.width / 2,
+                    y: clientY - rect.top - rect.height / 2
+                };
+            }
 
+            function zoomAt(clientX, clientY, nextScale) {
+                const point = getPointFromClient(clientX, clientY);
                 const prevScale = scale;
-                scale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+                const clampedScale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
 
-                if (scale === prevScale) {
+                if (clampedScale === prevScale) {
                     return;
                 }
 
+                scale = clampedScale;
                 const ratio = scale / prevScale;
-                translateX = cx - (cx - translateX) * ratio;
-                translateY = cy - (cy - translateY) * ratio;
+                translateX = point.x - (point.x - translateX) * ratio;
+                translateY = point.y - (point.y - translateY) * ratio;
+
+                if (scale === 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                applyTransform();
+            }
+
+            function getPointerPair() {
+                return Array.from(activePointers.values()).slice(0, 2);
+            }
+
+            function getDistance(a, b) {
+                return Math.hypot(b.clientX - a.clientX, b.clientY - a.clientY);
+            }
+
+            function getMidpoint(a, b) {
+                return {
+                    clientX: (a.clientX + b.clientX) / 2,
+                    clientY: (a.clientY + b.clientY) / 2
+                };
+            }
+
+            function startPinchGesture() {
+                const [first, second] = getPointerPair();
+
+                if (!first || !second) {
+                    return;
+                }
+
+                const midpoint = getMidpoint(first, second);
+                const point = getPointFromClient(midpoint.clientX, midpoint.clientY);
+
+                pinchStartDistance = getDistance(first, second);
+                pinchStartScale = scale;
+                pinchStartTranslateX = translateX;
+                pinchStartTranslateY = translateY;
+                pinchStartMidX = point.x;
+                pinchStartMidY = point.y;
+                isDragging = false;
+                applyTransform();
+            }
+
+            function updatePinchGesture() {
+                const [first, second] = getPointerPair();
+
+                if (!first || !second || pinchStartDistance <= 0) {
+                    return;
+                }
+
+                const midpoint = getMidpoint(first, second);
+                const point = getPointFromClient(midpoint.clientX, midpoint.clientY);
+                const distance = getDistance(first, second);
+                const nextScale = clamp(pinchStartScale * (distance / pinchStartDistance), MIN_SCALE, MAX_SCALE);
+                const scaleRatio = nextScale / pinchStartScale;
+
+                scale = nextScale;
+                translateX = point.x - (pinchStartMidX - pinchStartTranslateX) * scaleRatio;
+                translateY = point.y - (pinchStartMidY - pinchStartTranslateY) * scaleRatio;
 
                 if (scale === 1) {
                     translateX = 0;
@@ -494,49 +570,101 @@
             });
 
             container.addEventListener("pointerdown", (event) => {
-                if (scale <= 1) {
-                    showOverlay();
-                    return;
+                activePointers.set(event.pointerId, {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                });
+
+                try {
+                    container.setPointerCapture(event.pointerId);
+                } catch (_) {
                 }
 
-                isDragging = true;
-                dragStartX = event.clientX;
-                dragStartY = event.clientY;
-                dragOriginX = translateX;
-                dragOriginY = translateY;
-                container.classList.add("is-dragging");
-                container.setPointerCapture(event.pointerId);
+                if (activePointers.size === 1) {
+                    if (scale > 1) {
+                        isDragging = true;
+                        dragStartX = event.clientX;
+                        dragStartY = event.clientY;
+                        dragOriginX = translateX;
+                        dragOriginY = translateY;
+                        applyTransform();
+                    }
+                } else if (activePointers.size === 2) {
+                    startPinchGesture();
+                }
+
                 showOverlay();
             });
 
             container.addEventListener("pointermove", (event) => {
-                if (!isDragging) {
+                if (!activePointers.has(event.pointerId)) {
+                    return;
+                }
+
+                activePointers.set(event.pointerId, {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                });
+
+                if (activePointers.size >= 2) {
+                    updatePinchGesture();
+                    showOverlay();
+                    return;
+                }
+
+                if (!isDragging || scale <= 1) {
                     return;
                 }
 
                 translateX = dragOriginX + (event.clientX - dragStartX);
                 translateY = dragOriginY + (event.clientY - dragStartY);
                 applyTransform();
+                showOverlay();
             });
 
-            function endDrag(event) {
-                if (!isDragging) {
-                    return;
-                }
-
-                isDragging = false;
-                container.classList.remove("is-dragging");
+            function endPointer(event) {
+                activePointers.delete(event.pointerId);
 
                 try {
                     container.releasePointerCapture(event.pointerId);
                 } catch (_) {
                 }
 
+                if (activePointers.size >= 2) {
+                    startPinchGesture();
+                } else if (activePointers.size === 1) {
+                    const [remainingPointer] = getPointerPair();
+                    if (remainingPointer && scale > 1) {
+                        isDragging = true;
+                        dragStartX = remainingPointer.clientX;
+                        dragStartY = remainingPointer.clientY;
+                        dragOriginX = translateX;
+                        dragOriginY = translateY;
+                    } else {
+                        isDragging = false;
+                    }
+                } else {
+                    isDragging = false;
+                }
+
+                applyTransform();
                 showOverlay();
             }
 
-            container.addEventListener("pointerup", endDrag);
-            container.addEventListener("pointercancel", endDrag);
+            container.addEventListener("pointerup", endPointer);
+            container.addEventListener("pointercancel", endPointer);
+            container.addEventListener("pointerleave", (event) => {
+                if (!activePointers.has(event.pointerId)) {
+                    return;
+                }
+
+                const relatedTarget = event.relatedTarget;
+                if (relatedTarget && container.contains(relatedTarget)) {
+                    return;
+                }
+
+                endPointer(event);
+            });
 
             container.addEventListener("dblclick", (event) => {
                 if (scale > 1) {
@@ -579,6 +707,8 @@
 
             window.addEventListener("resize", () => {
                 resetView();
+                activePointers.clear();
+                pinchStartDistance = 0;
                 showOverlay();
             });
 
