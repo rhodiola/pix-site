@@ -334,7 +334,56 @@
                 return Math.min(max, Math.max(min, value));
             }
 
+            function getDisplayedImageSize() {
+                const rect = container.getBoundingClientRect();
+                const naturalWidth = image.naturalWidth || image.width || rect.width;
+                const naturalHeight = image.naturalHeight || image.height || rect.height;
+
+                if (!naturalWidth || !naturalHeight) {
+                    return {
+                        width: rect.width,
+                        height: rect.height
+                    };
+                }
+
+                const imageRatio = naturalWidth / naturalHeight;
+                const containerRatio = rect.width / rect.height;
+
+                if (imageRatio > containerRatio) {
+                    return {
+                        width: rect.width,
+                        height: rect.width / imageRatio
+                    };
+                }
+
+                return {
+                    width: rect.height * imageRatio,
+                    height: rect.height
+                };
+            }
+
+            function constrainTranslation(nextX = translateX, nextY = translateY, nextScale = scale) {
+                if (nextScale <= 1) {
+                    return { x: 0, y: 0 };
+                }
+
+                const rect = container.getBoundingClientRect();
+                const displayed = getDisplayedImageSize();
+                const scaledWidth = displayed.width * nextScale;
+                const scaledHeight = displayed.height * nextScale;
+                const limitX = Math.max(0, (scaledWidth - rect.width) / 2);
+                const limitY = Math.max(0, (scaledHeight - rect.height) / 2);
+
+                return {
+                    x: clamp(nextX, -limitX, limitX),
+                    y: clamp(nextY, -limitY, limitY)
+                };
+            }
+
             function applyTransform() {
+                const constrained = constrainTranslation(translateX, translateY, scale);
+                translateX = constrained.x;
+                translateY = constrained.y;
                 image.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
                 container.classList.toggle("is-zoomed", scale > 1);
                 container.classList.toggle("is-dragging", isDragging);
@@ -385,6 +434,10 @@
                 if (scale === 1) {
                     translateX = 0;
                     translateY = 0;
+                } else {
+                    const constrained = constrainTranslation(translateX, translateY, scale);
+                    translateX = constrained.x;
+                    translateY = constrained.y;
                 }
 
                 applyTransform();
@@ -445,6 +498,10 @@
                 if (scale === 1) {
                     translateX = 0;
                     translateY = 0;
+                } else {
+                    const constrained = constrainTranslation(translateX, translateY, scale);
+                    translateX = constrained.x;
+                    translateY = constrained.y;
                 }
 
                 applyTransform();
@@ -659,8 +716,11 @@
                     return;
                 }
 
-                translateX = dragOriginX + (event.clientX - dragStartX);
-                translateY = dragOriginY + (event.clientY - dragStartY);
+                const nextX = dragOriginX + (event.clientX - dragStartX);
+                const nextY = dragOriginY + (event.clientY - dragStartY);
+                const constrained = constrainTranslation(nextX, nextY, scale);
+                translateX = constrained.x;
+                translateY = constrained.y;
                 applyTransform();
                 showOverlay();
             });
