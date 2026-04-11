@@ -288,10 +288,7 @@
         <h1 class="viewer-meta__title">霧光の森</h1>
         <p class="viewer-meta__description">月光のような光が差し込む幻想的な深い森の小道</p>
 
-        <div class="viewer-meta__actions">
-            <button class="viewer-download" id="viewerDownload" type="button" data-download-url="https://img.npaso.com/download/pix-20260409-155121.webp"
-                data-download-filename="pix-20260409-155121.webp" aria-label="高解像度 Download">高解像度 Download</button>
-        </div>
+        <div class="viewer-meta__actions" id="viewerActions"></div>
 
         <p class="viewer-download-note" id="viewerDownloadNote" aria-live="polite"></p>
     </aside>
@@ -302,7 +299,20 @@
             const image = document.getElementById("viewerImage");
             const backButton = document.querySelector(".viewer-back");
             const metaPanel = document.getElementById("viewerMeta");
-            const downloadButton = document.getElementById("viewerDownload");
+            const actionsContainer = document.getElementById("viewerActions");
+
+            const DOWNLOAD_SOURCES = [
+                {
+                    key: "download",
+                    url: "../../download/pix-20260409-155121.webp",
+                    filename: "pix-20260409-155121.webp"
+                },
+                {
+                    key: "download2",
+                    url: "../../download2/pix-20260409-155121.webp",
+                    filename: "pix-20260409-155121.webp"
+                }
+            ];
 
             let scale = 1;
             let translateX = 0;
@@ -321,7 +331,6 @@
             let dragOriginY = 0;
 
             let hideTimer = null;
-            let isDownloadAvailable = false;
             let isDownloading = false;
 
             const activePointers = new Map();
@@ -625,47 +634,77 @@
             function showNote(_) {
             }
 
-            function setDownloadAvailable(available) {
-                isDownloadAvailable = available;
-                downloadButton.classList.toggle("is-available", available);
-                downloadButton.classList.toggle("is-disabled", !available);
+            function createDownloadButtonLabel(width, height) {
+                return `${width}×${height}`;
             }
 
-            function detectDownloadAvailability() {
-                const url = downloadButton?.dataset.downloadUrl;
+            function createDownloadButton(source, width, height) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "viewer-download is-available";
+                button.dataset.downloadUrl = source.url;
+                button.dataset.downloadFilename = source.filename;
+                button.setAttribute("aria-label", `${createDownloadButtonLabel(width, height)} をダウンロード`);
+                button.textContent = createDownloadButtonLabel(width, height);
+                button.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    await downloadCurrentImage(button);
+                });
+                return button;
+            }
 
-                if (!downloadButton || !url) {
-                    setDownloadAvailable(false);
+            function probeDownloadSource(source) {
+                return new Promise((resolve) => {
+                    const probe = new Image();
+
+                    probe.onload = () => {
+                        resolve({
+                            source,
+                            width: probe.naturalWidth || 0,
+                            height: probe.naturalHeight || 0
+                        });
+                    };
+
+                    probe.onerror = () => {
+                        resolve(null);
+                    };
+
+                    probe.src = `${source.url}${source.url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+                });
+            }
+
+            async function renderDownloadButtons() {
+                if (!actionsContainer) {
                     return;
                 }
 
-                const probe = new Image();
+                actionsContainer.replaceChildren();
 
-                probe.onload = () => {
-                    setDownloadAvailable(true);
-                };
+                const results = await Promise.all(DOWNLOAD_SOURCES.map((source) => probeDownloadSource(source)));
+                const availableSources = results.filter((result) => result && result.width > 0 && result.height > 0);
 
-                probe.onerror = () => {
-                    setDownloadAvailable(false);
-                };
-
-                probe.src = `${url}${url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+                availableSources.forEach((entry) => {
+                    actionsContainer.appendChild(
+                        createDownloadButton(entry.source, entry.width, entry.height)
+                    );
+                });
             }
 
-            async function downloadCurrentImage() {
-                if (!downloadButton || !isDownloadAvailable || isDownloading) {
+            async function downloadCurrentImage(button) {
+                if (!button || isDownloading) {
                     return;
                 }
 
-                const url = downloadButton.dataset.downloadUrl;
-                const filename = downloadButton.dataset.downloadFilename || "pix-20260409-155121.webp";
+                const url = button.dataset.downloadUrl;
+                const filename = button.dataset.downloadFilename || "pix-20260409-155121.webp";
 
                 if (!url) {
                     return;
                 }
 
                 isDownloading = true;
-                downloadButton.classList.add("is-busy");
+                button.classList.add("is-busy");
                 showOverlay();
 
                 try {
@@ -701,7 +740,7 @@
                 } catch (_) {
                 } finally {
                     isDownloading = false;
-                    downloadButton.classList.remove("is-busy");
+                    button.classList.remove("is-busy");
                     showOverlay();
                 }
             }
@@ -756,11 +795,6 @@
                 showOverlay();
             });
 
-            downloadButton?.addEventListener("click", async (event) => {
-                event.preventDefault();
-                event.stopPropagation();
-                await downloadCurrentImage();
-            });
 
             [
                 "mousemove",
@@ -805,7 +839,7 @@
                 window.visualViewport.addEventListener("resize", handleViewportChange);
             }
 
-            detectDownloadAvailability();
+            renderDownloadButtons();
             showOverlay();
         })();
     </script>
