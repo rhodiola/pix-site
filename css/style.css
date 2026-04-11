@@ -19,6 +19,7 @@
 
 html {
     scroll-behavior: smooth;
+    overscroll-behavior-y: none;
 }
 
 body {
@@ -30,6 +31,7 @@ body {
         radial-gradient(circle at top right, rgba(255, 255, 255, 0.03), transparent 26%),
         linear-gradient(180deg, #06090d 0%, #0b1118 48%, #0e141c 100%);
     line-height: 1.65;
+    overscroll-behavior-y: none;
 }
 
 img {
