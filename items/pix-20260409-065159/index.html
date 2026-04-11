@@ -310,7 +310,7 @@
             const SCALE_STEP = 0.2;
             const OVERLAY_HIDE_DELAY = 2600;
             const RESIZE_SETTLE_DELAY = 180;
-            const PAN_SAFE_GUTTER_X = 32;
+            const PAN_SAFE_GUTTER_X = 0;
 
             let scale = 1;
             let translateX = 0;
@@ -384,10 +384,8 @@
                 const displayed = getDisplayedImageSize();
                 const scaledWidth = displayed.width * nextScale;
                 const scaledHeight = displayed.height * nextScale;
-                const rawLimitX = Math.max(0, (scaledWidth - rect.width) / 2);
-                const rawLimitY = Math.max(0, (scaledHeight - rect.height) / 2);
-                const limitX = Math.max(0, rawLimitX - PAN_SAFE_GUTTER_X);
-                const limitY = rawLimitY;
+                const limitX = Math.max(0, (scaledWidth - rect.width) / 2);
+                const limitY = Math.max(0, (scaledHeight - rect.height) / 2);
 
                 return {
                     x: clamp(nextX, -limitX, limitX),
