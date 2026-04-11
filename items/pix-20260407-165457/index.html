@@ -91,16 +91,17 @@
             cursor: default;
         }
 
-        .viewer-stage.is-cursor-hidden {
-            cursor: none;
-        }
-
         .viewer-stage.is-zoomed {
             cursor: grab;
         }
 
         .viewer-stage.is-dragging {
             cursor: grabbing;
+        }
+
+        .viewer-stage.is-cursor-hidden,
+        .viewer-stage.is-cursor-hidden.is-zoomed {
+            cursor: none;
         }
 
         .viewer-image {
@@ -846,7 +847,6 @@
                 }
                 showOverlay();
             });
-
 
             [
                 "mousemove",
