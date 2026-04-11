@@ -20,6 +20,7 @@ const elements = {
 
 let masonryRenderToken = 0;
 let resizeTimer = null;
+let lastColumnCount = 0;
 
 function escapeHtml(value = "") {
     return String(value)
@@ -332,6 +333,11 @@ function bindEvents() {
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => {
+            const nextColumnCount = getColumnCount();
+            if (nextColumnCount === lastColumnCount) {
+                return;
+            }
+            lastColumnCount = nextColumnCount;
             renderGallery();
         }, 120);
     });
@@ -342,6 +348,7 @@ function init() {
     updateCurrentCount();
     applySavedState(loadGalleryState());
     bindEvents();
+    lastColumnCount = getColumnCount();
     refresh();
 }
 
