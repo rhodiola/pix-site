@@ -126,7 +126,7 @@ function createCardHtml(image) {
     const urls = getImageUrls(image.id);
 
     return `
-    <article class="card">
+    <article class="card" data-image-id="${escapeHtml(image.id)}">
       <a href="./items/${encodeURIComponent(image.id)}/" class="card__link" aria-label="${escapeHtml(image.title || image.id)} の詳細ページへ">
         <div class="card__thumb">
           <img src="${urls.thumb}" alt="${escapeHtml(image.alt || image.title || image.id)}" loading="lazy" />
@@ -157,7 +157,7 @@ function getColumnCount() {
     return 5;
 }
 
-function createMasonryColumns(count) {
+function createMasonryColumns(target, count) {
     const fragment = document.createDocumentFragment();
     const columns = [];
 
@@ -169,8 +169,8 @@ function createMasonryColumns(count) {
         fragment.appendChild(column);
     }
 
-    elements.gallery.innerHTML = "";
-    elements.gallery.appendChild(fragment);
+    target.innerHTML = "";
+    target.appendChild(fragment);
 
     return columns;
 }
@@ -191,7 +191,7 @@ function waitForImagesInCard(card) {
 
     return Promise.all(
         images.map((img) => new Promise((resolve) => {
-            if (img.complete) {
+            if (img.complete && img.naturalWidth > 0) {
                 resolve();
                 return;
             }
@@ -208,34 +208,99 @@ function waitForImagesInCard(card) {
     );
 }
 
+function isDefaultGalleryState() {
+    return state.activeCategory === "all" && !state.searchText && state.sortOrder === "new";
+}
+
+function createStagingGallery() {
+    const staging = document.createElement("div");
+    staging.className = "gallery";
+    staging.setAttribute("aria-hidden", "true");
+    staging.style.position = "absolute";
+    staging.style.left = "-99999px";
+    staging.style.top = "0";
+    staging.style.visibility = "hidden";
+    staging.style.pointerEvents = "none";
+    staging.style.width = `${elements.gallery.getBoundingClientRect().width}px`;
+    document.body.appendChild(staging);
+    return staging;
+}
+
+function captureScrollAnchor() {
+    const cards = Array.from(elements.gallery.querySelectorAll(".card[data-image-id]"));
+
+    for (const card of cards) {
+        const rect = card.getBoundingClientRect();
+        if (rect.bottom > 0) {
+            return {
+                imageId: card.dataset.imageId || "",
+                top: rect.top
+            };
+        }
+    }
+
+    return null;
+}
+
+function restoreScrollAnchor(anchor) {
+    if (!anchor || !anchor.imageId) {
+        return;
+    }
+
+    const selector = `.card[data-image-id="${CSS.escape(anchor.imageId)}"]`;
+    const card = elements.gallery.querySelector(selector);
+    if (!card) {
+        return;
+    }
+
+    const delta = card.getBoundingClientRect().top - anchor.top;
+    if (delta !== 0) {
+        window.scrollBy(0, delta);
+    }
+}
+
 async function renderGallery() {
     const token = ++masonryRenderToken;
     const items = [...state.filteredImages];
 
     elements.galleryEmpty.hidden = items.length > 0;
-    elements.gallery.innerHTML = "";
 
     if (items.length === 0) {
+        elements.gallery.innerHTML = "";
         return;
     }
 
     const columnCount = getColumnCount();
-    const columns = createMasonryColumns(columnCount);
+    const staging = createStagingGallery();
+    const columns = createMasonryColumns(staging, columnCount);
 
-    for (const image of items) {
+    try {
+        for (const image of items) {
+            if (token !== masonryRenderToken) {
+                return;
+            }
+
+            const card = createCardElement(image);
+            await waitForImagesInCard(card);
+
+            if (token !== masonryRenderToken) {
+                return;
+            }
+
+            const targetColumn = getShortestColumn(columns) || columns[0];
+            targetColumn.appendChild(card);
+        }
+
         if (token !== masonryRenderToken) {
             return;
         }
 
-        const card = createCardElement(image);
-        await waitForImagesInCard(card);
-
-        if (token !== masonryRenderToken) {
-            return;
-        }
-
-        const targetColumn = getShortestColumn(columns) || columns[0];
-        targetColumn.appendChild(card);
+        const anchor = captureScrollAnchor();
+        const nextColumns = Array.from(staging.children);
+        elements.gallery.replaceChildren(...nextColumns);
+        restoreScrollAnchor(anchor);
+    } finally {
+        staging.remove();
     }
 }
 
@@ -394,7 +459,14 @@ function init() {
     applySavedState(loadGalleryState());
     bindEvents();
     lastColumnCount = getColumnCount();
-    refresh();
+    filterImages();
+
+    if (isDefaultGalleryState()) {
+        elements.galleryEmpty.hidden = state.filteredImages.length > 0;
+        return;
+    }
+
+    renderGallery();
 }
 
 init();
