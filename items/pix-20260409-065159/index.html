@@ -91,6 +91,10 @@
             cursor: default;
         }
 
+        .viewer-stage.is-cursor-hidden {
+            cursor: none;
+        }
+
         .viewer-stage.is-zoomed {
             cursor: grab;
         }
@@ -319,6 +323,7 @@
 
             let hideTimer = null;
             let isDownloading = false;
+            let lastPointerType = "mouse";
 
             const activePointers = new Map();
             let pinchState = null;
@@ -379,6 +384,7 @@
                 pinchState = null;
                 activePointers.clear();
                 container.classList.remove("is-dragging");
+                syncCursorVisibility();
                 applyTransform();
             }
 
@@ -426,6 +432,8 @@
             }
 
             function beginDrag(event) {
+                lastPointerType = event.pointerType || lastPointerType;
+
                 if (scale <= 1) {
                     return;
                 }
@@ -437,6 +445,7 @@
                 dragOriginX = translateX;
                 dragOriginY = translateY;
                 container.classList.add("is-dragging");
+                syncCursorVisibility();
             }
 
             function updateDrag(event) {
@@ -457,6 +466,7 @@
                 isDragging = false;
                 dragPointerId = null;
                 container.classList.remove("is-dragging");
+                syncCursorVisibility();
                 showOverlay();
             }
 
@@ -479,6 +489,7 @@
                 isDragging = false;
                 dragPointerId = null;
                 container.classList.remove("is-dragging");
+                syncCursorVisibility();
             }
 
             function updatePinch() {
@@ -519,6 +530,7 @@
             }
 
             function handlePointerDown(event) {
+                lastPointerType = event.pointerType || lastPointerType;
                 activePointers.set(event.pointerId, {
                     clientX: event.clientX,
                     clientY: event.clientY
@@ -587,6 +599,7 @@
                     dragOriginX = translateX;
                     dragOriginY = translateY;
                     container.classList.toggle("is-dragging", isDragging);
+                    syncCursorVisibility();
                 } else {
                     endDrag(event);
                     container.classList.remove("is-dragging");
@@ -603,11 +616,21 @@
                 applyTransform();
             }
 
+            function syncCursorVisibility() {
+                const shouldHideCursor = lastPointerType === "mouse"
+                    && !isDragging
+                    && !backButton.classList.contains("is-visible")
+                    && !metaPanel.classList.contains("is-visible");
+
+                container.classList.toggle("is-cursor-hidden", shouldHideCursor);
+            }
+
             function showOverlay() {
                 backButton.classList.add("is-visible");
                 backButton.classList.remove("is-dimmed");
                 metaPanel.classList.add("is-visible");
                 metaPanel.classList.remove("is-dimmed");
+                syncCursorVisibility();
 
                 clearTimeout(hideTimer);
                 hideTimer = setTimeout(() => {
@@ -615,6 +638,7 @@
                     backButton.classList.add("is-dimmed");
                     metaPanel.classList.remove("is-visible");
                     metaPanel.classList.add("is-dimmed");
+                    syncCursorVisibility();
                 }, OVERLAY_HIDE_DELAY);
             }
 
@@ -833,7 +857,16 @@
                 "click",
                 "wheel"
             ].forEach((eventName) => {
-                window.addEventListener(eventName, showOverlay, { passive: true });
+                window.addEventListener(eventName, (event) => {
+                    if (event && typeof event.pointerType === "string" && event.pointerType) {
+                        lastPointerType = event.pointerType;
+                    } else if (eventName.startsWith("mouse")) {
+                        lastPointerType = "mouse";
+                    } else if (eventName === "touchstart") {
+                        lastPointerType = "touch";
+                    }
+                    showOverlay();
+                }, { passive: true });
             });
 
             document.addEventListener("visibilitychange", () => {
@@ -869,6 +902,7 @@
 
             renderDownloadButtons();
             showOverlay();
+            syncCursorVisibility();
         })();
     </script>
 </body>
