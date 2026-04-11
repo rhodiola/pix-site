@@ -20,6 +20,7 @@ const elements = {
 
 let masonryRenderToken = 0;
 let resizeTimer = null;
+let lastViewportWidth = window.innerWidth;
 
 function escapeHtml(value = "") {
     return String(value)
@@ -332,6 +333,13 @@ function bindEvents() {
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => {
+            const nextViewportWidth = window.innerWidth;
+
+            if (nextViewportWidth === lastViewportWidth) {
+                return;
+            }
+
+            lastViewportWidth = nextViewportWidth;
             renderGallery();
         }, 120);
     });
