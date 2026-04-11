@@ -20,10 +20,6 @@ const elements = {
 
 let masonryRenderToken = 0;
 let resizeTimer = null;
-let lastColumnCount = 0;
-let isGalleryPointerDragging = false;
-let galleryPointerStartX = 0;
-let galleryPointerStartY = 0;
 
 function escapeHtml(value = "") {
     return String(value)
@@ -126,7 +122,7 @@ function createCardHtml(image) {
     const urls = getImageUrls(image.id);
 
     return `
-    <article class="card" data-image-id="${escapeHtml(image.id)}">
+    <article class="card">
       <a href="./items/${encodeURIComponent(image.id)}/" class="card__link" aria-label="${escapeHtml(image.title || image.id)} の詳細ページへ">
         <div class="card__thumb">
           <img src="${urls.thumb}" alt="${escapeHtml(image.alt || image.title || image.id)}" loading="lazy" />
@@ -145,8 +141,6 @@ function createCardElement(image) {
     return wrapper.firstElementChild;
 }
 
-
-
 function getColumnCount() {
     const width = window.innerWidth;
 
@@ -157,7 +151,7 @@ function getColumnCount() {
     return 5;
 }
 
-function createMasonryColumns(target, count) {
+function createMasonryColumns(count) {
     const fragment = document.createDocumentFragment();
     const columns = [];
 
@@ -169,8 +163,8 @@ function createMasonryColumns(target, count) {
         fragment.appendChild(column);
     }
 
-    target.innerHTML = "";
-    target.appendChild(fragment);
+    elements.gallery.innerHTML = "";
+    elements.gallery.appendChild(fragment);
 
     return columns;
 }
@@ -191,7 +185,7 @@ function waitForImagesInCard(card) {
 
     return Promise.all(
         images.map((img) => new Promise((resolve) => {
-            if (img.complete && img.naturalWidth > 0) {
+            if (img.complete) {
                 resolve();
                 return;
             }
@@ -208,99 +202,34 @@ function waitForImagesInCard(card) {
     );
 }
 
-function isDefaultGalleryState() {
-    return state.activeCategory === "all" && !state.searchText && state.sortOrder === "new";
-}
-
-function createStagingGallery() {
-    const staging = document.createElement("div");
-    staging.className = "gallery";
-    staging.setAttribute("aria-hidden", "true");
-    staging.style.position = "absolute";
-    staging.style.left = "-99999px";
-    staging.style.top = "0";
-    staging.style.visibility = "hidden";
-    staging.style.pointerEvents = "none";
-    staging.style.width = `${elements.gallery.getBoundingClientRect().width}px`;
-    document.body.appendChild(staging);
-    return staging;
-}
-
-function captureScrollAnchor() {
-    const cards = Array.from(elements.gallery.querySelectorAll(".card[data-image-id]"));
-
-    for (const card of cards) {
-        const rect = card.getBoundingClientRect();
-        if (rect.bottom > 0) {
-            return {
-                imageId: card.dataset.imageId || "",
-                top: rect.top
-            };
-        }
-    }
-
-    return null;
-}
-
-function restoreScrollAnchor(anchor) {
-    if (!anchor || !anchor.imageId) {
-        return;
-    }
-
-    const selector = `.card[data-image-id="${CSS.escape(anchor.imageId)}"]`;
-    const card = elements.gallery.querySelector(selector);
-    if (!card) {
-        return;
-    }
-
-    const delta = card.getBoundingClientRect().top - anchor.top;
-    if (delta !== 0) {
-        window.scrollBy(0, delta);
-    }
-}
-
 async function renderGallery() {
     const token = ++masonryRenderToken;
     const items = [...state.filteredImages];
 
     elements.galleryEmpty.hidden = items.length > 0;
+    elements.gallery.innerHTML = "";
 
     if (items.length === 0) {
-        elements.gallery.innerHTML = "";
         return;
     }
 
     const columnCount = getColumnCount();
-    const staging = createStagingGallery();
-    const columns = createMasonryColumns(staging, columnCount);
+    const columns = createMasonryColumns(columnCount);
 
-    try {
-        for (const image of items) {
-            if (token !== masonryRenderToken) {
-                return;
-            }
-
-            const card = createCardElement(image);
-            await waitForImagesInCard(card);
-
-            if (token !== masonryRenderToken) {
-                return;
-            }
-
-            const targetColumn = getShortestColumn(columns) || columns[0];
-            targetColumn.appendChild(card);
-        }
-
+    for (const image of items) {
         if (token !== masonryRenderToken) {
             return;
         }
 
-        const anchor = captureScrollAnchor();
-        const nextColumns = Array.from(staging.children);
-        elements.gallery.replaceChildren(...nextColumns);
-        restoreScrollAnchor(anchor);
-    } finally {
-        staging.remove();
+        const card = createCardElement(image);
+        const targetColumn = getShortestColumn(columns) || columns[0];
+        targetColumn.appendChild(card);
+
+        await waitForImagesInCard(card);
+
+        if (token !== masonryRenderToken) {
+            return;
+        }
     }
 }
 
@@ -394,60 +323,15 @@ function bindEvents() {
         saveGalleryState();
     });
 
-    elements.gallery?.addEventListener("pointerdown", (event) => {
-        if (event.pointerType !== "touch") {
-            return;
-        }
-
-        isGalleryPointerDragging = false;
-        galleryPointerStartX = event.clientX;
-        galleryPointerStartY = event.clientY;
-    }, { passive: true });
-
-    elements.gallery?.addEventListener("pointermove", (event) => {
-        if (event.pointerType !== "touch") {
-            return;
-        }
-
-        const deltaX = Math.abs(event.clientX - galleryPointerStartX);
-        const deltaY = Math.abs(event.clientY - galleryPointerStartY);
-
-        if (deltaX > 10 || deltaY > 10) {
-            isGalleryPointerDragging = true;
-        }
-    }, { passive: true });
-
-    elements.gallery?.addEventListener("pointerup", () => {
-        requestAnimationFrame(() => {
-            isGalleryPointerDragging = false;
-        });
-    }, { passive: true });
-
-    elements.gallery?.addEventListener("pointercancel", () => {
-        isGalleryPointerDragging = false;
-    }, { passive: true });
-
     elements.gallery?.addEventListener("click", (event) => {
         const link = event.target.closest(".card__link");
         if (!link) return;
-
-        if (isGalleryPointerDragging) {
-            event.preventDefault();
-            event.stopPropagation();
-            return;
-        }
-
         saveGalleryState();
-    }, true);
+    });
 
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);
         resizeTimer = window.setTimeout(() => {
-            const nextColumnCount = getColumnCount();
-            if (nextColumnCount === lastColumnCount) {
-                return;
-            }
-            lastColumnCount = nextColumnCount;
             renderGallery();
         }, 120);
     });
@@ -458,15 +342,7 @@ function init() {
     updateCurrentCount();
     applySavedState(loadGalleryState());
     bindEvents();
-    lastColumnCount = getColumnCount();
-    filterImages();
-
-    if (isDefaultGalleryState()) {
-        elements.galleryEmpty.hidden = state.filteredImages.length > 0;
-        return;
-    }
-
-    renderGallery();
+    refresh();
 }
 
 init();
