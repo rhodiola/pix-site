@@ -160,7 +160,9 @@
         }
 
         .viewer-meta__actions {
-            display: flex;
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
             pointer-events: auto;
             flex-wrap: wrap;
             gap: 10px;
@@ -184,6 +186,7 @@
             -webkit-backdrop-filter: blur(8px);
             transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
             cursor: pointer;
+            pointer-events: auto;
         }
 
         .viewer-download.is-available {
