@@ -21,6 +21,9 @@ const elements = {
 let masonryRenderToken = 0;
 let resizeTimer = null;
 let lastColumnCount = 0;
+let isGalleryPointerDragging = false;
+let galleryPointerStartX = 0;
+let galleryPointerStartY = 0;
 
 function escapeHtml(value = "") {
     return String(value)
@@ -326,11 +329,51 @@ function bindEvents() {
         saveGalleryState();
     });
 
+    elements.gallery?.addEventListener("pointerdown", (event) => {
+        if (event.pointerType !== "touch") {
+            return;
+        }
+
+        isGalleryPointerDragging = false;
+        galleryPointerStartX = event.clientX;
+        galleryPointerStartY = event.clientY;
+    }, { passive: true });
+
+    elements.gallery?.addEventListener("pointermove", (event) => {
+        if (event.pointerType !== "touch") {
+            return;
+        }
+
+        const deltaX = Math.abs(event.clientX - galleryPointerStartX);
+        const deltaY = Math.abs(event.clientY - galleryPointerStartY);
+
+        if (deltaX > 10 || deltaY > 10) {
+            isGalleryPointerDragging = true;
+        }
+    }, { passive: true });
+
+    elements.gallery?.addEventListener("pointerup", () => {
+        requestAnimationFrame(() => {
+            isGalleryPointerDragging = false;
+        });
+    }, { passive: true });
+
+    elements.gallery?.addEventListener("pointercancel", () => {
+        isGalleryPointerDragging = false;
+    }, { passive: true });
+
     elements.gallery?.addEventListener("click", (event) => {
         const link = event.target.closest(".card__link");
         if (!link) return;
+
+        if (isGalleryPointerDragging) {
+            event.preventDefault();
+            event.stopPropagation();
+            return;
+        }
+
         saveGalleryState();
-    });
+    }, true);
 
     window.addEventListener("resize", () => {
         clearTimeout(resizeTimer);
