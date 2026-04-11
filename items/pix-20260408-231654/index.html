@@ -560,9 +560,11 @@
                 const hadPointer = activePointers.has(event.pointerId);
                 activePointers.delete(event.pointerId);
 
-                try {
-                    container.releasePointerCapture(event.pointerId);
-                } catch (_) {
+                if (hadPointer && container.hasPointerCapture && container.hasPointerCapture(event.pointerId)) {
+                    try {
+                        container.releasePointerCapture(event.pointerId);
+                    } catch (_) {
+                    }
                 }
 
                 if (!hadPointer) {
@@ -736,10 +738,10 @@
             });
 
             container.addEventListener("pointerdown", handlePointerDown);
-            container.addEventListener("pointermove", handlePointerMove);
-            container.addEventListener("pointerup", handlePointerEnd);
-            container.addEventListener("pointercancel", handlePointerEnd);
-            container.addEventListener("pointerleave", handlePointerEnd);
+            container.addEventListener("lostpointercapture", handlePointerEnd);
+            window.addEventListener("pointermove", handlePointerMove, { passive: false });
+            window.addEventListener("pointerup", handlePointerEnd);
+            window.addEventListener("pointercancel", handlePointerEnd);
 
             container.addEventListener("dblclick", (event) => {
                 if (scale > 1) {
