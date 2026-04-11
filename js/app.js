@@ -142,6 +142,8 @@ function createCardElement(image) {
     return wrapper.firstElementChild;
 }
 
+
+
 function getColumnCount() {
     const width = window.innerWidth;
 
@@ -223,14 +225,14 @@ async function renderGallery() {
         }
 
         const card = createCardElement(image);
-        const targetColumn = getShortestColumn(columns) || columns[0];
-        targetColumn.appendChild(card);
-
         await waitForImagesInCard(card);
 
         if (token !== masonryRenderToken) {
             return;
         }
+
+        const targetColumn = getShortestColumn(columns) || columns[0];
+        targetColumn.appendChild(card);
     }
 }
 
