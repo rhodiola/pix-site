@@ -301,19 +301,6 @@
             const metaPanel = document.getElementById("viewerMeta");
             const actionsContainer = document.getElementById("viewerActions");
 
-            const DOWNLOAD_SOURCES = [
-                {
-                    key: "download",
-                    url: "../../download/pix-20260409-065159.webp",
-                    filename: "pix-20260409-065159.webp"
-                },
-                {
-                    key: "download2",
-                    url: "../../download2/pix-20260409-065159.webp",
-                    filename: "pix-20260409-065159.webp"
-                }
-            ];
-
             let scale = 1;
             let translateX = 0;
             let translateY = 0;
@@ -634,6 +621,46 @@
             function showNote(_) {
             }
 
+            function getDownloadSources() {
+                const viewerUrl = image.currentSrc || image.src || "";
+
+                if (!viewerUrl) {
+                    return [];
+                }
+
+                let filename = "pix-20260409-065159.webp";
+
+                try {
+                    const parsedUrl = new URL(viewerUrl, location.href);
+                    const pathnameParts = parsedUrl.pathname.split("/");
+                    filename = pathnameParts[pathnameParts.length - 1] || filename;
+                } catch (_) {
+                }
+
+                const createVariantUrl = (folderName) => {
+                    try {
+                        const parsedUrl = new URL(viewerUrl, location.href);
+                        parsedUrl.pathname = parsedUrl.pathname.replace(/\/viewer\//, `/${folderName}/`);
+                        return parsedUrl.toString();
+                    } catch (_) {
+                        return "";
+                    }
+                };
+
+                return [
+                    {
+                        key: "download",
+                        url: createVariantUrl("download"),
+                        filename
+                    },
+                    {
+                        key: "download2",
+                        url: createVariantUrl("download2"),
+                        filename
+                    }
+                ].filter((source) => source.url);
+            }
+
             function createDownloadButtonLabel(width, height) {
                 return `${width}×${height}`;
             }
@@ -681,7 +708,8 @@
 
                 actionsContainer.replaceChildren();
 
-                const results = await Promise.all(DOWNLOAD_SOURCES.map((source) => probeDownloadSource(source)));
+                const downloadSources = getDownloadSources();
+                const results = await Promise.all(downloadSources.map((source) => probeDownloadSource(source)));
                 const availableSources = results.filter((result) => result && result.width > 0 && result.height > 0);
 
                 availableSources.forEach((entry) => {
