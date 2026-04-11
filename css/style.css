@@ -19,7 +19,6 @@
 
 html {
     scroll-behavior: smooth;
-    overscroll-behavior-y: none;
 }
 
 body {
@@ -37,6 +36,7 @@ body {
 img {
     display: block;
     max-width: 100%;
+    -webkit-user-drag: none;
 }
 
 a {
