@@ -7,16 +7,22 @@
     <meta name="theme-color" content="#000000" />
     <title>蒼天の巨星と白の大地 | pix.npaso.com</title>
     <meta name="description" content="広大な地形の上に巨大な惑星と小さな衛星が見える空の風景" />
-        <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QW33DQK8XD"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-QW33DQK8XD');
+        const isOwner = localStorage.getItem('ga_owner') === '1';
+
+        gtag('set', 'user_properties', {
+            viewer_type: isOwner ? 'owner' : 'general'
+        });
+
+        gtag('config', 'G-QW33DQK8XD');
     </script>
-<link rel="canonical" href="https://pix.npaso.com/items/pix-20260415-182215/" />
+    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260415-182215/" />
 
     <style>
         * {

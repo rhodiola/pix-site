@@ -7,16 +7,22 @@
     <meta name="theme-color" content="#000000" />
     <title>コロニー内部 | pix.npaso.com</title>
     <meta name="description" content="巨大な円筒形の構造物の内部に、地表と都市のような景観が広がり、奥の中心部から強い白い光が差し込んでいる画像です。" />
-        <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QW33DQK8XD"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-QW33DQK8XD');
+        const isOwner = localStorage.getItem('ga_owner') === '1';
+
+        gtag('set', 'user_properties', {
+            viewer_type: isOwner ? 'owner' : 'general'
+        });
+
+        gtag('config', 'G-QW33DQK8XD');
     </script>
-<link rel="canonical" href="https://pix.npaso.com/items/pix-20260408-231654/" />
+    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260408-231654/" />
 
     <style>
         * {

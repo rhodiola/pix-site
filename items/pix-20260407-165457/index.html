@@ -7,16 +7,22 @@
     <meta name="theme-color" content="#000000" />
     <title>古びた部屋 | pix.npaso.com</title>
     <meta name="description" content="机の上の古い手紙と手帳を、差し込む光が照らす部屋" />
-        <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QW33DQK8XD"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-QW33DQK8XD');
+        const isOwner = localStorage.getItem('ga_owner') === '1';
+
+        gtag('set', 'user_properties', {
+            viewer_type: isOwner ? 'owner' : 'general'
+        });
+
+        gtag('config', 'G-QW33DQK8XD');
     </script>
-<link rel="canonical" href="https://pix.npaso.com/items/pix-20260407-165457/" />
+    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260407-165457/" />
 
     <style>
         * {

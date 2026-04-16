@@ -7,16 +7,22 @@
     <meta name="theme-color" content="#000000" />
     <title>雨上がりに差し込む光(灰色) | pix.npaso.com</title>
     <meta name="description" content="雨で濡れた広場の先に霧が立ちこめ上空から光が差し込む都市風景の灰色版" />
-        <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QW33DQK8XD"></script>
     <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
 
-      gtag('config', 'G-QW33DQK8XD');
+        const isOwner = localStorage.getItem('ga_owner') === '1';
+
+        gtag('set', 'user_properties', {
+            viewer_type: isOwner ? 'owner' : 'general'
+        });
+
+        gtag('config', 'G-QW33DQK8XD');
     </script>
-<link rel="canonical" href="https://pix.npaso.com/items/pix-20260412-055318-01/" />
+    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260412-055318-01/" />
 
     <style>
         * {
