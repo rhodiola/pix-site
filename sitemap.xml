@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://pix.npaso.com/</loc>
-    <lastmod>2026-04-12</lastmod>
+    <lastmod>2026-04-15</lastmod>
   </url>
   <url>
     <loc>https://pix.npaso.com/items/pix-20260407-163746/</loc>
@@ -39,5 +39,13 @@
   <url>
     <loc>https://pix.npaso.com/items/pix-20260412-145421/</loc>
     <lastmod>2026-04-12</lastmod>
+  </url>
+  <url>
+    <loc>https://pix.npaso.com/items/pix-20260415-202534/</loc>
+    <lastmod>2026-04-15</lastmod>
+  </url>
+  <url>
+    <loc>https://pix.npaso.com/items/pix-20260415-182215/</loc>
+    <lastmod>2026-04-15</lastmod>
   </url>
 </urlset>
