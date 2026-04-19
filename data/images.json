@@ -144,5 +144,32 @@
       "poster"
     ],
     "featured": false
+  },
+  {
+    "id": "pix-20260418-195006",
+    "title": "湖面に反射する夕日",
+    "alt": "淡く赤い夕日が湖面に反射している。",
+    "tags": [
+      "湖",
+      "夕日"
+    ],
+    "category": [
+      "wallpaper"
+    ],
+    "featured": false
+  },
+  {
+    "id": "pix-20260419-182006",
+    "title": "川辺の土手道",
+    "alt": "川沿いの土手道と霧で霞む川",
+    "tags": [
+      "川",
+      "土手",
+      "霧"
+    ],
+    "category": [
+      "wallpaper"
+    ],
+    "featured": false
   }
 ]
