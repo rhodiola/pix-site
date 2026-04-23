@@ -171,5 +171,46 @@
       "wallpaper"
     ],
     "featured": false
+  },
+  {
+    "id": "pix-20260423-094948",
+    "title": "湖の夕暮れ",
+    "alt": "夕日が反射している湖",
+    "tags": [
+      "夕日",
+      "湖",
+      "鳥"
+    ],
+    "category": [
+      "wallpaper",
+      "background"
+    ],
+    "featured": false
+  },
+  {
+    "id": "pix-20260423-093134",
+    "title": "惑星のリムフレア",
+    "alt": "茶色の惑星とリムフレア",
+    "tags": [
+      "惑星",
+      "リムフレア"
+    ],
+    "category": [
+      "poster",
+      "background"
+    ],
+    "featured": false
+  },
+  {
+    "id": "pix-20260423-092748",
+    "title": "ドーム型コロニー",
+    "alt": "上面全体が採光部になっているドーム型コロニー",
+    "tags": [
+      "スペースコロニー"
+    ],
+    "category": [
+      "wallpaper"
+    ],
+    "featured": false
   }
 ]

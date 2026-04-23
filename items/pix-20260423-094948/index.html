@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="ja" style="background:#000;">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <title>湖の夕暮れ | pix.npaso.com</title>
+    <meta name="description" content="夕日が反射している湖" />
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QW33DQK8XD"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        const isOwner = localStorage.getItem('ga_owner') === '1';
+
+        gtag('set', 'user_properties', {
+            viewer_type: isOwner ? 'owner' : 'general'
+        });
+
+        gtag('config', 'G-QW33DQK8XD');
+    </script>
+    <link rel="canonical" href="https://pix.npaso.com/items/pix-20260423-094948/" />
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            color: #fff;
+            font-family: Inter, "Noto Sans JP", system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            overflow: hidden;
+        }
+
+        a,
+        button {
+            color: inherit;
+            text-decoration: none;
+            font: inherit;
+        }
+
+        .viewer-back {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            z-index: 30;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 92px;
+            height: 48px;
+            padding: 0 16px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 700;
+            line-height: 1;
+            letter-spacing: 0.02em;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.42);
+            transition: opacity 0.28s ease, background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .viewer-back.is-visible {
+            opacity: 0.86;
+            pointer-events: auto;
+        }
+
+        .viewer-back.is-dimmed {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .viewer-back:hover {
+            background: rgba(0, 0, 0, 0.84);
+            transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5);
+        }
+
+        .viewer-stage {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            touch-action: none;
+            user-select: none;
+            cursor: default;
+        }
+
+        .viewer-stage.is-zoomed {
+            cursor: grab;
+        }
+
+        .viewer-stage.is-dragging {
+            cursor: grabbing;
+        }
+
+        .viewer-stage.is-cursor-hidden,
+        .viewer-stage.is-cursor-hidden.is-zoomed {
+            cursor: none;
+        }
+
+        .viewer-image {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            width: auto;
+            height: auto;
+            transform-origin: center center;
+            transform: translate3d(0px, 0px, 0) scale(1);
+            will-change: transform;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .viewer-meta {
+            position: fixed;
+            left: 18px;
+            right: 18px;
+            bottom: 18px;
+            z-index: 25;
+            max-width: min(760px, calc(100vw - 36px));
+            padding: 16px 18px;
+            border-radius: 24px;
+            background: transparent;
+            border: 0;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            box-shadow: none;
+            transition: opacity 0.28s ease, transform 0.28s ease;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .viewer-meta.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: none;
+        }
+
+        .viewer-meta.is-dimmed {
+            opacity: 0;
+            transform: translateY(4px);
+            pointer-events: none;
+        }
+
+        .viewer-meta__title {
+            margin: 0 0 8px;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: clamp(0.92rem, 1.4vw, 1.02rem);
+            font-weight: 500;
+            line-height: 1.45;
+            letter-spacing: 0.01em;
+        }
+
+        .viewer-meta__description {
+            margin: 0;
+            color: rgba(255, 255, 255, 0.84);
+            font-size: 0.96rem;
+            line-height: 1.65;
+        }
+
+        .viewer-meta__actions {
+            display: inline-flex;
+            width: fit-content;
+            max-width: 100%;
+            pointer-events: auto;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .viewer-download {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-height: 38px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.87rem;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+            cursor: pointer;
+            pointer-events: auto;
+        }
+
+        .viewer-download.is-available {
+            display: inline-flex;
+        }
+
+        .viewer-download:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.26);
+            transform: translateY(-1px);
+        }
+
+        .viewer-download:active {
+            transform: translateY(0);
+        }
+
+        .viewer-download.is-busy {
+            opacity: 0.72;
+            cursor: progress;
+        }
+
+        .viewer-download.is-disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .viewer-download-note {
+            display: none;
+            margin-top: 10px;
+            color: rgba(255, 255, 255, 0.72);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .viewer-download-note.is-visible {
+            display: block;
+        }
+
+        .viewer-meta__tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .viewer-meta__tag {
+            display: inline-flex;
+            align-items: center;
+            min-height: 28px;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.88);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 640px) {
+            .viewer-back {
+                min-width: 70px;
+                height: 42px;
+                font-size: 14px;
+            }
+
+            .viewer-meta {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                padding: 14px 14px;
+                border-radius: 20px;
+            }
+
+            .viewer-meta__description {
+                font-size: 0.9rem;
+            }
+
+            .viewer-download {
+                min-height: 36px;
+                padding: 0 12px;
+                font-size: 0.84rem;
+            }
+
+            .viewer-download-note {
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a class="viewer-back" href="../../index.html" aria-label="一覧へ戻る">←</a>
+
+    <main class="viewer-stage" id="viewerStage" aria-label="画像ビューア">
+        <img class="viewer-image" id="viewerImage" src="https://img.npaso.com/viewer/pix-20260423-094948.webp" alt="夕日が反射している湖" loading="eager"
+            draggable="false" />
+    </main>
+
+    <aside class="viewer-meta" id="viewerMeta" aria-label="作品情報">
+        <h1 class="viewer-meta__title">湖の夕暮れ</h1>
+        <p class="viewer-meta__description">夕日が反射している湖</p>
+
+        <div class="viewer-meta__actions" id="viewerActions"></div>
+
+        <p class="viewer-download-note" id="viewerDownloadNote" aria-live="polite"></p>
+    </aside>
+
+    <script>
+        (() => {
+            const container = document.getElementById("viewerStage");
+            const image = document.getElementById("viewerImage");
+            const backButton = document.querySelector(".viewer-back");
+            const metaPanel = document.getElementById("viewerMeta");
+            const actionsContainer = document.getElementById("viewerActions");
+
+            let scale = 1;
+            let translateX = 0;
+            let translateY = 0;
+
+            const MIN_SCALE = 1;
+            const MAX_SCALE = 6;
+            const SCALE_STEP = 0.2;
+            const OVERLAY_HIDE_DELAY = 2600;
+
+            let isDragging = false;
+            let dragPointerId = null;
+            let dragStartX = 0;
+            let dragStartY = 0;
+            let dragOriginX = 0;
+            let dragOriginY = 0;
+
+            let hideTimer = null;
+            let isDownloading = false;
+            let lastPointerType = "mouse";
+
+            const activePointers = new Map();
+            let pinchState = null;
+
+            function clamp(value, min, max) {
+                return Math.min(max, Math.max(min, value));
+            }
+
+            function getBaseImageSize() {
+                const containerRect = container.getBoundingClientRect();
+                const naturalWidth = image.naturalWidth || containerRect.width || 1;
+                const naturalHeight = image.naturalHeight || containerRect.height || 1;
+                const widthRatio = containerRect.width / naturalWidth;
+                const heightRatio = containerRect.height / naturalHeight;
+                const fitRatio = Math.min(widthRatio, heightRatio);
+
+                return {
+                    width: naturalWidth * fitRatio,
+                    height: naturalHeight * fitRatio,
+                    containerWidth: containerRect.width,
+                    containerHeight: containerRect.height,
+                    left: containerRect.left,
+                    top: containerRect.top
+                };
+            }
+
+            function clampTranslation(nextX, nextY, targetScale = scale) {
+                const metrics = getBaseImageSize();
+                const scaledWidth = metrics.width * targetScale;
+                const scaledHeight = metrics.height * targetScale;
+                const maxOffsetX = Math.max(0, (scaledWidth - metrics.containerWidth) / 2);
+                const maxOffsetY = Math.max(0, (scaledHeight - metrics.containerHeight) / 2);
+
+                return {
+                    x: clamp(nextX, -maxOffsetX, maxOffsetX),
+                    y: clamp(nextY, -maxOffsetY, maxOffsetY)
+                };
+            }
+
+            function applyTransform() {
+                const bounded = scale <= 1
+                    ? { x: 0, y: 0 }
+                    : clampTranslation(translateX, translateY, scale);
+
+                translateX = bounded.x;
+                translateY = bounded.y;
+
+                image.style.transform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`;
+                container.classList.toggle("is-zoomed", scale > 1);
+            }
+
+            function resetView() {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                isDragging = false;
+                dragPointerId = null;
+                pinchState = null;
+                activePointers.clear();
+                container.classList.remove("is-dragging");
+                syncCursorVisibility();
+                applyTransform();
+            }
+
+            function zoomAt(clientX, clientY, nextScale) {
+                const rect = container.getBoundingClientRect();
+                const cx = clientX - rect.left - rect.width / 2;
+                const cy = clientY - rect.top - rect.height / 2;
+
+                const prevScale = scale;
+                const clampedScale = clamp(nextScale, MIN_SCALE, MAX_SCALE);
+
+                if (clampedScale === prevScale) {
+                    return;
+                }
+
+                scale = clampedScale;
+                const ratio = scale / prevScale;
+                translateX = cx - (cx - translateX) * ratio;
+                translateY = cy - (cy - translateY) * ratio;
+
+                if (scale === 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                applyTransform();
+            }
+
+            function getPinchData() {
+                const points = [...activePointers.values()];
+
+                if (points.length < 2) {
+                    return null;
+                }
+
+                const [a, b] = points;
+                const dx = b.clientX - a.clientX;
+                const dy = b.clientY - a.clientY;
+
+                return {
+                    distance: Math.hypot(dx, dy),
+                    centerX: (a.clientX + b.clientX) / 2,
+                    centerY: (a.clientY + b.clientY) / 2
+                };
+            }
+
+            function beginDrag(event) {
+                lastPointerType = event.pointerType || lastPointerType;
+
+                if (scale <= 1) {
+                    return;
+                }
+
+                isDragging = true;
+                dragPointerId = event.pointerId;
+                dragStartX = event.clientX;
+                dragStartY = event.clientY;
+                dragOriginX = translateX;
+                dragOriginY = translateY;
+                container.classList.add("is-dragging");
+                syncCursorVisibility();
+            }
+
+            function updateDrag(event) {
+                if (!isDragging || dragPointerId !== event.pointerId) {
+                    return;
+                }
+
+                translateX = dragOriginX + (event.clientX - dragStartX);
+                translateY = dragOriginY + (event.clientY - dragStartY);
+                applyTransform();
+            }
+
+            function endDrag(event) {
+                if (!isDragging || dragPointerId !== event.pointerId) {
+                    return;
+                }
+
+                isDragging = false;
+                dragPointerId = null;
+                container.classList.remove("is-dragging");
+                syncCursorVisibility();
+                showOverlay();
+            }
+
+            function beginPinch() {
+                const pinchData = getPinchData();
+
+                if (!pinchData) {
+                    return;
+                }
+
+                pinchState = {
+                    startDistance: pinchData.distance,
+                    startScale: scale,
+                    startTranslateX: translateX,
+                    startTranslateY: translateY,
+                    lastCenterX: pinchData.centerX,
+                    lastCenterY: pinchData.centerY
+                };
+
+                isDragging = false;
+                dragPointerId = null;
+                container.classList.remove("is-dragging");
+                syncCursorVisibility();
+            }
+
+            function updatePinch() {
+                const pinchData = getPinchData();
+
+                if (!pinchState || !pinchData || !pinchState.startDistance) {
+                    return;
+                }
+
+                const rect = container.getBoundingClientRect();
+                const prevScale = scale;
+                const targetScale = clamp(
+                    pinchState.startScale * (pinchData.distance / pinchState.startDistance),
+                    MIN_SCALE,
+                    MAX_SCALE
+                );
+
+                const focusX = pinchData.centerX - rect.left - rect.width / 2;
+                const focusY = pinchData.centerY - rect.top - rect.height / 2;
+                const ratio = targetScale / prevScale;
+
+                translateX = focusX - (focusX - translateX) * ratio;
+                translateY = focusY - (focusY - translateY) * ratio;
+
+                translateX += pinchData.centerX - pinchState.lastCenterX;
+                translateY += pinchData.centerY - pinchState.lastCenterY;
+
+                scale = targetScale;
+                pinchState.lastCenterX = pinchData.centerX;
+                pinchState.lastCenterY = pinchData.centerY;
+
+                if (scale === 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+
+                applyTransform();
+            }
+
+            function handlePointerDown(event) {
+                lastPointerType = event.pointerType || lastPointerType;
+                activePointers.set(event.pointerId, {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                });
+
+                try {
+                    container.setPointerCapture(event.pointerId);
+                } catch (_) {
+                }
+
+                if (activePointers.size === 1) {
+                    beginDrag(event);
+                } else if (activePointers.size === 2) {
+                    beginPinch();
+                }
+
+                showOverlay();
+            }
+
+            function handlePointerMove(event) {
+                if (!activePointers.has(event.pointerId)) {
+                    return;
+                }
+
+                activePointers.set(event.pointerId, {
+                    clientX: event.clientX,
+                    clientY: event.clientY
+                });
+
+                if (activePointers.size >= 2) {
+                    updatePinch();
+                    return;
+                }
+
+                updateDrag(event);
+            }
+
+            function handlePointerEnd(event) {
+                const hadPointer = activePointers.has(event.pointerId);
+                activePointers.delete(event.pointerId);
+
+                if (hadPointer && container.hasPointerCapture && container.hasPointerCapture(event.pointerId)) {
+                    try {
+                        container.releasePointerCapture(event.pointerId);
+                    } catch (_) {
+                    }
+                }
+
+                if (!hadPointer) {
+                    return;
+                }
+
+                if (activePointers.size >= 2) {
+                    beginPinch();
+                } else {
+                    pinchState = null;
+                }
+
+                if (activePointers.size === 1) {
+                    const [remainingPointerId, remainingPointer] = [...activePointers.entries()][0];
+
+                    isDragging = scale > 1;
+                    dragPointerId = remainingPointerId;
+                    dragStartX = remainingPointer.clientX;
+                    dragStartY = remainingPointer.clientY;
+                    dragOriginX = translateX;
+                    dragOriginY = translateY;
+                    container.classList.toggle("is-dragging", isDragging);
+                    syncCursorVisibility();
+                } else {
+                    endDrag(event);
+                    container.classList.remove("is-dragging");
+                }
+
+                showOverlay();
+            }
+
+            function clampToViewport() {
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                applyTransform();
+            }
+
+            function syncCursorVisibility() {
+                const shouldHideCursor = lastPointerType === "mouse"
+                    && !isDragging
+                    && !backButton.classList.contains("is-visible")
+                    && !metaPanel.classList.contains("is-visible");
+
+                container.classList.toggle("is-cursor-hidden", shouldHideCursor);
+            }
+
+            function showOverlay() {
+                backButton.classList.add("is-visible");
+                backButton.classList.remove("is-dimmed");
+                metaPanel.classList.add("is-visible");
+                metaPanel.classList.remove("is-dimmed");
+                syncCursorVisibility();
+
+                clearTimeout(hideTimer);
+                hideTimer = setTimeout(() => {
+                    backButton.classList.remove("is-visible");
+                    backButton.classList.add("is-dimmed");
+                    metaPanel.classList.remove("is-visible");
+                    metaPanel.classList.add("is-dimmed");
+                    syncCursorVisibility();
+                }, OVERLAY_HIDE_DELAY);
+            }
+
+            function showNote(_) {
+            }
+
+            function getDownloadSources() {
+                const viewerUrl = image.currentSrc || image.src || "";
+
+                if (!viewerUrl) {
+                    return [];
+                }
+
+                let filename = "pix-20260423-094948.webp";
+
+                try {
+                    const parsedUrl = new URL(viewerUrl, location.href);
+                    const pathnameParts = parsedUrl.pathname.split("/");
+                    filename = pathnameParts[pathnameParts.length - 1] || filename;
+                } catch (_) {
+                }
+
+                const createVariantUrl = (folderName) => {
+                    try {
+                        const parsedUrl = new URL(viewerUrl, location.href);
+                        parsedUrl.pathname = parsedUrl.pathname.replace(/\/viewer\//, `/${folderName}/`);
+                        return parsedUrl.toString();
+                    } catch (_) {
+                        return "";
+                    }
+                };
+
+                return [
+                    {
+                        key: "download",
+                        url: createVariantUrl("download"),
+                        filename
+                    },
+                    {
+                        key: "download2",
+                        url: createVariantUrl("download2"),
+                        filename
+                    }
+                ].filter((source) => source.url);
+            }
+
+            function createDownloadButtonLabel(width, height) {
+                return `${width}×${height} DL`;
+            }
+
+            function createDownloadButton(source, width, height) {
+                const button = document.createElement("button");
+                button.type = "button";
+                button.className = "viewer-download is-available";
+                button.dataset.downloadUrl = source.url;
+                button.dataset.downloadFilename = source.filename;
+                button.setAttribute("aria-label", `${createDownloadButtonLabel(width, height)} をダウンロード`);
+                button.textContent = createDownloadButtonLabel(width, height);
+                button.addEventListener("click", async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    await downloadCurrentImage(button);
+                });
+                return button;
+            }
+
+            function probeDownloadSource(source) {
+                return new Promise((resolve) => {
+                    const probe = new Image();
+
+                    probe.onload = () => {
+                        resolve({
+                            source,
+                            width: probe.naturalWidth || 0,
+                            height: probe.naturalHeight || 0
+                        });
+                    };
+
+                    probe.onerror = () => {
+                        resolve(null);
+                    };
+
+                    probe.src = `${source.url}${source.url.includes("?") ? "&" : "?"}v=${Date.now()}`;
+                });
+            }
+
+            async function renderDownloadButtons() {
+                if (!actionsContainer) {
+                    return;
+                }
+
+                actionsContainer.replaceChildren();
+
+                const downloadSources = getDownloadSources();
+                const results = await Promise.all(downloadSources.map((source) => probeDownloadSource(source)));
+                const availableSources = results.filter((result) => result && result.width > 0 && result.height > 0);
+
+                availableSources.forEach((entry) => {
+                    actionsContainer.appendChild(
+                        createDownloadButton(entry.source, entry.width, entry.height)
+                    );
+                });
+            }
+
+            async function downloadCurrentImage(button) {
+                if (!button || isDownloading) {
+                    return;
+                }
+
+                const url = button.dataset.downloadUrl;
+                const filename = button.dataset.downloadFilename || "pix-20260423-094948.webp";
+
+                if (!url) {
+                    return;
+                }
+
+                isDownloading = true;
+                button.classList.add("is-busy");
+                showOverlay();
+
+                try {
+                    const response = await fetch(url, {
+                        method: "GET",
+                        mode: "cors",
+                        credentials: "omit",
+                        cache: "no-store",
+                        redirect: "follow"
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                    const blob = await response.blob();
+                    const objectUrl = URL.createObjectURL(blob);
+
+                    try {
+                        const link = document.createElement("a");
+                        link.href = objectUrl;
+                        link.download = filename;
+                        link.rel = "noopener";
+                        link.style.display = "none";
+                        document.body.appendChild(link);
+                        link.click();
+                        link.remove();
+                    } finally {
+                        setTimeout(() => {
+                            URL.revokeObjectURL(objectUrl);
+                        }, 1500);
+                    }
+                } catch (_) {
+                } finally {
+                    isDownloading = false;
+                    button.classList.remove("is-busy");
+                    showOverlay();
+                }
+            }
+
+            container.addEventListener("wheel", (event) => {
+                event.preventDefault();
+                const delta = event.deltaY < 0 ? SCALE_STEP : -SCALE_STEP;
+                zoomAt(event.clientX, event.clientY, scale + delta);
+                showOverlay();
+            }, { passive: false });
+
+            window.addEventListener("keydown", (event) => {
+                const key = event.key;
+
+                if (key === "+" || key === "=") {
+                    event.preventDefault();
+                    zoomAt(window.innerWidth / 2, window.innerHeight / 2, scale + SCALE_STEP);
+                } else if (key === "-") {
+                    event.preventDefault();
+                    zoomAt(window.innerWidth / 2, window.innerHeight / 2, scale - SCALE_STEP);
+                } else if (key === "0") {
+                    event.preventDefault();
+                    resetView();
+                } else if (key === "Escape") {
+                    event.preventDefault();
+                    try {
+                        if (document.referrer && new URL(document.referrer).origin === location.origin) {
+                            history.back();
+                        } else {
+                            window.location.href = "../../index.html";
+                        }
+                    } catch (_) {
+                        window.location.href = "../../index.html";
+                    }
+                }
+
+                showOverlay();
+            });
+
+            container.addEventListener("pointerdown", handlePointerDown);
+            container.addEventListener("lostpointercapture", handlePointerEnd);
+            window.addEventListener("pointermove", handlePointerMove);
+            window.addEventListener("pointerup", handlePointerEnd);
+            window.addEventListener("pointercancel", handlePointerEnd);
+
+            container.addEventListener("dblclick", (event) => {
+                if (scale > 1) {
+                    resetView();
+                } else {
+                    zoomAt(event.clientX, event.clientY, 2);
+                }
+                showOverlay();
+            });
+
+            [
+                "mousemove",
+                "mousedown",
+                "touchstart",
+                "pointermove",
+                "pointerdown",
+                "click",
+                "wheel"
+            ].forEach((eventName) => {
+                window.addEventListener(eventName, (event) => {
+                    if (event && typeof event.pointerType === "string" && event.pointerType) {
+                        lastPointerType = event.pointerType;
+                    } else if (eventName.startsWith("mouse")) {
+                        lastPointerType = "mouse";
+                    } else if (eventName === "touchstart") {
+                        lastPointerType = "touch";
+                    }
+                    showOverlay();
+                }, { passive: true });
+            });
+
+            document.addEventListener("visibilitychange", () => {
+                if (document.visibilityState === "visible") {
+                    showOverlay();
+                }
+            });
+
+            if (image.complete) {
+                resetView();
+            } else {
+                image.addEventListener("load", resetView, { once: true });
+            }
+
+            let resizeFrame = null;
+            const handleViewportChange = () => {
+                if (resizeFrame) {
+                    cancelAnimationFrame(resizeFrame);
+                }
+
+                resizeFrame = requestAnimationFrame(() => {
+                    clampToViewport();
+                    showOverlay();
+                });
+            };
+
+            window.addEventListener("resize", handleViewportChange);
+            window.addEventListener("orientationchange", handleViewportChange);
+
+            if (window.visualViewport) {
+                window.visualViewport.addEventListener("resize", handleViewportChange);
+            }
+
+            renderDownloadButtons();
+            showOverlay();
+            syncCursorVisibility();
+        })();
+    </script>
+</body>
+
+</html>
